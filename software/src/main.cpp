@@ -5,18 +5,23 @@ using namespace std;
 
 short alpha, beta;
 short tabal[4][4];
+bool firstRead = true;
 vector<short> seqA, seqB;
 
 bool readfile(ifstream& ifs){
+    if(firstRead){
+        firstRead = false;
+
+        for(int i = 0; i < 4; ++i){
+            for (int j = 0; j < 4; ++j)ifs >> tabal[i][j];
+        }
+    }
+
     ifs >> alpha;
-    
     if(ifs.eof())return false;
     if(alpha == -1)return false;
 
     ifs >> beta;
-    for(int i = 0; i < 4; ++i){
-        for (int j = 0; j < 4; ++j)ifs >> tabal[i][j];
-    }
 
     seqA.clear();
     seqB.clear();
@@ -41,7 +46,12 @@ bool readfile(ifstream& ifs){
 }
 
 
-
+int calculate(){
+    int **V = new int*[seqA.size()];
+    int **E = new int*[seqA.size()];
+    int **F = new int*[seqA.size()];
+    for(int i = 0; i < seqA.size(); ++i);
+}
 
 int main(int argc, char** argv){
     if(argc < 2 || argc > 3){
