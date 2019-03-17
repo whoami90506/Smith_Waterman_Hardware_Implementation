@@ -40,7 +40,28 @@ bool readfile(ifstream& ifs){
     return true;
 }
 
+int calculate(){
+    int ans = 0;
+    int *V = new int[seqB.size()];
+    int *F = new int[seqB.size()];
 
+    for(int i = 0; i < seqB.size(); ++i){
+        V[i] = 0;
+        F[i] = 0;
+    }
+
+    for(int i = 0; i < seqA.size(); ++i){
+        int E = 0;
+        int Vlast;
+
+        for(int j = 0; j < seqB.size(); ++j){
+            Vlast = V[i][j];
+
+        }
+    }
+
+    delete [] V, E;
+}
 
 
 int main(int argc, char** argv){
