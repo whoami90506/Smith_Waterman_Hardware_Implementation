@@ -4,9 +4,15 @@
 #include<algorithm>
 using namespace std;
 
+#define TRACE
+
 float alpha, beta, _match, _mismatch;
 bool firstRead = true;
 string seqA, seqB;
+
+#ifdef TRACE
+string targetA_rev, targetB_rev;
+#endif//TRACE
 
 bool readfile(ifstream& ifs){
 
@@ -23,14 +29,24 @@ inline float tabal(char a, char b) {
 }
 
 float calculate(){
-    float result = 0.0;
+    float result = tabal(seqA[0], seqB[0] );
     float **V = new float*[seqA.size()];
     float **E = new float*[seqA.size()];
     float **F = new float*[seqA.size()];
+    
+    #ifdef TRACE
+    unsigned flagX = 0, flagY = 0;
+    char **map = new char*[seqA.size()];
+    #endif//TRACE
+    
     for(unsigned i = 0; i < seqA.size(); ++i){
         V[i] = new float[seqB.size()];
         E[i] = new float[seqB.size()];
         F[i] = new float[seqB.size()];
+        
+        #ifdef TRACE
+        map[i] = new char[seqB.size()];
+        #endif//TRACE
     }
 
     for(unsigned i = 0; i < seqA.size(); ++i){
@@ -38,11 +54,49 @@ float calculate(){
             E[i][j] = j ? max(V[i][j-1] - alpha, E[i][j-1] - beta) : 0.0f;
             F[i][j] = i ? max(V[i-1][j] - alpha, F[i-1][j] - beta) : 0.0f;
 
-            V[i][j] = max(E[i][j], F[i][j]);
-            float temp = (i > 0 && j > 0) ? max(V[i-1][j-1] + tabal(seqA[i], seqB[j]), 0.0f) : tabal(seqA[i], seqB[j]) ;
-            V[i][j] = max(V[i][j], temp);
+            //0. new start
+            V[i][j] = 0.0f;
+            #ifdef TRACE
+            map[i][j] = 0;
+            #endif//TRACE
 
-            result = max(V[i][j], result);
+            //1. diagonal 
+            float temp = (i > 0 && j > 0) ? V[i-1][j-1] : 0.0f;
+            temp += tabal(seqA[i], seqB[j]);
+            if (temp > V[i][j] ){
+                V[i][j] = temp;
+                #ifdef TRACE
+                map[i][j] = 1;
+                #endif//TRACE
+            }
+
+            //2. gap A
+            if(F[i][j] > V[i][j]){
+                V[i][j] = F[i][j];
+                #ifdef TRACE
+                map[i][j] = 2;
+                #endif//TRACE
+            }
+
+            //3. gap B
+            if(E[i][j] > V[i][j]){
+                V[i][j] = E[i][j];
+                #ifdef TRACE
+                map[i][j] = 3;
+                #endif//TRACE
+            }
+
+            //result
+            if (V[i][j] > result){
+                result = V[i][j];
+                #ifdef TRACE
+                flagX = i;
+                flagY = j;
+                #endif//TRACE
+            }
+
+            //trace
+            //TODO
         }
     }
 
@@ -50,16 +104,25 @@ float calculate(){
         delete [] V[i];
         delete [] E[i];
         delete [] F[i];
+        
+        #ifdef TRACE
+        delete [] map[i];
+        #endif//TRACE
     }
     delete [] V;
     delete [] E;
     delete [] F;
+
+    #ifdef TRACE
+    delete [] map;
+    #endif//TRACE
+    
     return result;
 }
 
 int main(int argc, char** argv){
-    if(argc < 2 || argc > 3){
-        cout << "Usage: exec [input_file_name] <output_file_name>\n";
+    if(argc != 2){
+        cout << "Usage: exec [input_file_name]\n";
         return 1;
     }
 
@@ -70,15 +133,11 @@ int main(int argc, char** argv){
     }
 
     //calculate
-    vector<int> result;
-    while(readfile(ifs))result.push_back(calculate() );
-    ifs.close();
-
-    //output
-    for(auto &i : result)cout << i << endl;
-    if (argc == 3){
-        ofstream os(argv[2]);
-        for(auto &i : result)os << i << endl;
-        os.close();
+    while(readfile(ifs)){
+        cout << calculate() << endl;
+        #ifdef TRACE
+        #endif//TRACE
     }
+
+    ifs.close();
 }
