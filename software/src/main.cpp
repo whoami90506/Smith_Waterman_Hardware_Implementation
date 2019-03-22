@@ -66,7 +66,7 @@ float calculate(){
             if (temp > V[i][j] ){
                 V[i][j] = temp;
                 #ifdef TRACE
-                map[i][j] = 1;
+                map[i][j] = (i > 0 && j > 0) ? 1 : 0;
                 #endif//TRACE
             }
 
@@ -96,7 +96,29 @@ float calculate(){
             }
 
             //trace
-            //TODO
+            #ifdef TRACE
+            targetA_rev.clear();
+            targetB_rev.clear();
+            
+            while(map[flagX][flagY] != 0){
+                switch(map[flagX][flagY]){
+                    case 1:
+                        targetA_rev.push_back(seqA[flagX--]);
+                        targetB_rev.push_back(seqB[flagY--]);
+                        break;
+                    case 2:
+                        targetA_rev.push_back(seqA[flagX--]);
+                        targetB_rev.push_back('-');
+                        break;
+                    case 3:
+                        targetA_rev.push_back('-');
+                        targetB_rev.push_back(seqB[flagY--]);
+                    default :
+                        cout << "ERROR with map number :" << int(map[flagX][flagY]) << ".\n";
+                        map[flagX][flagY] = 0;
+                }
+            }
+            #endif//TRACE
         }
     }
 
@@ -136,6 +158,10 @@ int main(int argc, char** argv){
     while(readfile(ifs)){
         cout << calculate() << endl;
         #ifdef TRACE
+        for(string::reverse_iterator i = seqA.rbegin(); i != seqA.rend(); ++i)cout << *i;
+        cout << endl;
+        for(string::reverse_iterator i = seqB.rbegin(); i != seqB.rend(); ++i)cout << *i;
+        cout << endl;
         #endif//TRACE
     }
 

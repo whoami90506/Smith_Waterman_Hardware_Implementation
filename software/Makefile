@@ -2,8 +2,8 @@ file := src
 target := exec
 
 CC := g++
-CFLAGS := -Wall -g --std=c++11 -I $(file)
 CFLAGS := -Wall -O3 --std=c++11 -I $(file)
+CFLAGS := -Wall -g --std=c++11 -I $(file)
 
 SRCS := $(wildcard $(file)/*.cpp)
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
