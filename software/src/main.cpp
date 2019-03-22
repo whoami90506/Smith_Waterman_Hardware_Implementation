@@ -1,51 +1,23 @@
 #include<iostream>
 #include<fstream>
-#include<vector>
+#include<string>
 #include<algorithm>
 using namespace std;
 
-short alpha, beta;
-short tabal[4][4];
+float alpha, beta, match, mismatch;
 bool firstRead = true;
-vector<short> seqA, seqB;
+string seqA, seqB;
 
 bool readfile(ifstream& ifs){
-    if(firstRead){
-        firstRead = false;
-
-        for(int i = 0; i < 4; ++i){
-            for (int j = 0; j < 4; ++j)ifs >> tabal[i][j];
-        }
-    }
 
     ifs >> alpha;
     if(ifs.eof())return false;
-    if(alpha == -1)return false;
-
-    ifs >> beta;
-
-    seqA.clear();
-    seqB.clear();
-    bool first = true;
-    short temp;
-
-    while(true){
-        ifs >> temp;
-        if (temp == 5){
-            if(first){
-                first = false;
-                continue;
-            }
-            else break;
-        }
-
-        if(first)seqA.push_back(temp);
-        else seqB.push_back(temp);
-    }
+    if(alpha < 0)return false;
+    getline(ifs, seqA);
+    getline(ifs, seqB);
 
     return true;
 }
-
 
 int calculate(){
     int result = 0;
