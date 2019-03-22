@@ -25,7 +25,7 @@ bool readfile(ifstream& ifs){
 }
 
 inline float tabal(char a, char b) {
-    return (a == b) ? _match : _mismatch;
+    return (a == b) ? _match : -1 * _mismatch;
 }
 
 float calculate(){
