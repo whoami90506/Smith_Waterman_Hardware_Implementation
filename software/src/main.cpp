@@ -32,13 +32,17 @@ inline float table(char a, char b) {
 
 template<class T>
 void printMatrix(T** m, string name){
-    cout << name << endl;
-    cout << setw(4) << '_';
-    for(auto& i : seqA)cout << setw(4) << i;
-    cout << endl;
+    const bool printLabel = true;
+
+    if(printLabel){
+        cout << name << endl;
+        cout << setw(4) << '_';
+        for(auto& i : seqA)cout << setw(4) << i;
+        cout << endl;
+    }
 
     for(unsigned j = 0; j < seqB.size(); ++j){
-        cout << setw(4) << seqB[j];
+        if(printLabel) cout << setw(4) << seqB[j];
         for(unsigned i = 0; i < seqA.size(); ++i)cout << setw(4) << int(m[i][j]);
         cout << endl;
     }
