@@ -35,7 +35,7 @@ float calculate(){
     float **F = new float*[seqA.size()];
     
     #ifdef TRACE
-    unsigned flagX = 0, flagY = 0;
+    int flagX = 0, flagY = 0;
     char **map = new char*[seqA.size()];
     #endif//TRACE
     
@@ -66,7 +66,7 @@ float calculate(){
             if (temp > V[i][j] ){
                 V[i][j] = temp;
                 #ifdef TRACE
-                map[i][j] = (i > 0 && j > 0) ? 1 : 0;
+                map[i][j] = 1;
                 #endif//TRACE
             }
 
@@ -102,8 +102,11 @@ float calculate(){
     targetA_rev.clear();
     targetB_rev.clear();
 
-    while(map[flagX][flagY] != 0){
+    while(flagX >= 0 && flagY >= 0){
         switch(map[flagX][flagY]){
+            case 0:
+                flagX = -1;
+                break;
             case 1:
                 targetA_rev.push_back(seqA[flagX--]);
                 targetB_rev.push_back(seqB[flagY--]);
@@ -121,7 +124,7 @@ float calculate(){
 
             default :
                 cerr << "ERROR with map number : " << int(map[flagX][flagY]) << " .\n";
-                map[flagX][flagY] = 0;
+                flagX = -1;
         }
     }
     #endif//TRACE
