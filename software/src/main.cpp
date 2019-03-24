@@ -2,9 +2,11 @@
 #include<fstream>
 #include<string>
 #include<algorithm>
+#include <iomanip>
 using namespace std;
 
 #define TRACE
+#define DEBUG_PRINTMATRIX
 
 float alpha, beta, _match, _mismatch;
 bool firstRead = true;
@@ -24,12 +26,27 @@ bool readfile(ifstream& ifs){
     return true;
 }
 
-inline float tabal(char a, char b) {
+inline float table(char a, char b) {
     return (a == b) ? _match : _mismatch;
 }
 
+template<class T>
+void printMatrix(T** m, string name){
+    cout << name << endl;
+    cout << setw(4) << '_';
+    for(auto& i : seqA)cout << setw(4) << i;
+    cout << endl;
+
+    for(unsigned j = 0; j < seqB.size(); ++j){
+        cout << setw(4) << seqB[j];
+        for(unsigned i = 0; i < seqA.size(); ++i)cout << setw(4) << int(m[i][j]);
+        cout << endl;
+    }
+    cout << endl;
+}
+
 float calculate(){
-    float result = tabal(seqA[0], seqB[0] );
+    float result = table(seqA[0], seqB[0] );
     float **V = new float*[seqA.size()];
     float **E = new float*[seqA.size()];
     float **F = new float*[seqA.size()];
@@ -62,7 +79,7 @@ float calculate(){
 
             //1. diagonal 
             float temp = (i > 0 && j > 0) ? V[i-1][j-1] : 0.0f;
-            temp += tabal(seqA[i], seqB[j]);
+            temp += table(seqA[i], seqB[j]);
             if (temp > V[i][j] ){
                 V[i][j] = temp;
                 #ifdef TRACE
@@ -96,6 +113,16 @@ float calculate(){
             }
         }
     }
+
+    //print matrix
+    #ifdef DEBUG_PRINTMATRIX
+    printMatrix(E, "E");
+    printMatrix(F, "F");
+    printMatrix(V, "V");
+    #ifdef TRACE
+    printMatrix(map, "map");
+    #endif //TRAEC
+    #endif//DEBUG_PRINTMATRIX
 
     //trace
     #ifdef TRACE
