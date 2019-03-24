@@ -118,9 +118,9 @@ float calculate(){
                 targetA_rev.push_back('-');
                 targetB_rev.push_back(seqB[flagY--]);
                 break;
-                
+
             default :
-                cout << "ERROR with map number : " << int(map[flagX][flagY]) << " .\n";
+                cerr << "ERROR with map number : " << int(map[flagX][flagY]) << " .\n";
                 map[flagX][flagY] = 0;
         }
     }
