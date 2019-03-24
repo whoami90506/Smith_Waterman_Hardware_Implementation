@@ -6,7 +6,7 @@
 using namespace std;
 
 #define TRACE
-#define DEBUG_PRINTMATRIX
+//#define DEBUG_PRINTMATRIX
 
 float alpha, beta, _match, _mismatch;
 bool firstRead = true;
@@ -57,17 +57,12 @@ float calculate(){
     
     #ifdef TRACE
     int flagX = 0, flagY = 0;
-    char **map = new char*[seqA.size()];
     #endif//TRACE
     
     for(unsigned i = 0; i < seqA.size(); ++i){
         V[i] = new float[seqB.size()];
         E[i] = new float[seqB.size()];
         F[i] = new float[seqB.size()];
-        
-        #ifdef TRACE
-        map[i] = new char[seqB.size()];
-        #endif//TRACE
     }
 
     for(unsigned i = 0; i < seqA.size(); ++i){
@@ -77,35 +72,17 @@ float calculate(){
 
             //0. new start
             V[i][j] = 0.0f;
-            #ifdef TRACE
-            map[i][j] = 0;
-            #endif//TRACE
 
             //1. diagonal 
             float temp = (i > 0 && j > 0) ? V[i-1][j-1] : 0.0f;
             temp += table(seqA[i], seqB[j]);
-            if (temp > V[i][j] ){
-                V[i][j] = temp;
-                #ifdef TRACE
-                map[i][j] = 1;
-                #endif//TRACE
-            }
+            if (temp > V[i][j] )V[i][j] = temp;
 
             //2. gap A
-            if(F[i][j] > V[i][j]){
-                V[i][j] = F[i][j];
-                #ifdef TRACE
-                map[i][j] = 2;
-                #endif//TRACE
-            }
+            if(F[i][j] > V[i][j])V[i][j] = F[i][j];
 
             //3. gap B
-            if(E[i][j] > V[i][j]){
-                V[i][j] = E[i][j];
-                #ifdef TRACE
-                map[i][j] = 3;
-                #endif//TRACE
-            }
+            if(E[i][j] > V[i][j])V[i][j] = E[i][j];
 
             //result
             if (V[i][j] > result){
@@ -123,9 +100,6 @@ float calculate(){
     printMatrix(E, "E");
     printMatrix(F, "F");
     printMatrix(V, "V");
-    #ifdef TRACE
-    printMatrix(map, "map");
-    #endif //TRAEC
     #endif//DEBUG_PRINTMATRIX
 
     //trace
@@ -134,28 +108,16 @@ float calculate(){
     targetB_rev.clear();
 
     while(flagX >= 0 && flagY >= 0){
-        switch(map[flagX][flagY]){
-            case 0:
-                flagX = -1;
-                break;
-            case 1:
-                targetA_rev.push_back(seqA[flagX--]);
-                targetB_rev.push_back(seqB[flagY--]);
-                break;
-
-            case 2:
-                targetA_rev.push_back(seqA[flagX--]);
-                targetB_rev.push_back('-');
-                break;
-
-            case 3:
-                targetA_rev.push_back('-');
-                targetB_rev.push_back(seqB[flagY--]);
-                break;
-
-            default :
-                cerr << "ERROR with map number : " << int(map[flagX][flagY]) << " .\n";
-                flagX = -1;
+        if(V[flagX][flagY] == 0)flagX = -1;
+        else if (V[flagX][flagY] == F[flagX][flagY]){
+            targetA_rev.push_back(seqA[flagX--]);
+            targetB_rev.push_back('-');
+        }else if (V[flagX][flagY] == E[flagX][flagY]){
+            targetA_rev.push_back('-');
+            targetB_rev.push_back(seqB[flagY--]); 
+        }else {
+            targetA_rev.push_back(seqA[flagX--]);
+            targetB_rev.push_back(seqB[flagY--]);
         }
     }
     #endif//TRACE
@@ -164,18 +126,10 @@ float calculate(){
         delete [] V[i];
         delete [] E[i];
         delete [] F[i];
-        
-        #ifdef TRACE
-        delete [] map[i];
-        #endif//TRACE
     }
     delete [] V;
     delete [] E;
     delete [] F;
-
-    #ifdef TRACE
-    delete [] map;
-    #endif//TRACE
     
     return result;
 }
