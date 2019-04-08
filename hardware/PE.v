@@ -40,9 +40,7 @@ myMax calF(.a(vIn_alpha), .b(fIn_beta), .result(n_fOut));
 
 //compute v
 wire [`V_E_F_Bit-1 : 0] posDiag, maxEF, n_vOut, n_vOut_alpha;
-myMax posi0 (.a(diag), .b({`V_E_F_Bit{1'b0}}), .result(posDiag));
-myMax comEF (.a(eOut), .b(n_fOut), .result(maxEF));
-myMax comV  (.a(maxEF), .b(posDiag), .result(n_vOut));
+myMax4 ans(.a(diag), .b(eOut), .c(n_fOut), .d(`V_E_F_Bit'b0), .result(n_vOut));
 assign n_vOut_alpha = n_vOut + minusAlpha;
 
 always @(posedge clk or negedge rst) begin
