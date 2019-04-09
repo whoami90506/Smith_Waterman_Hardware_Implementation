@@ -37,4 +37,26 @@ module myMax4 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	myMax #(.DATA_WIDTH(DATA_WIDTH)) mFinal(.a(result1), .b(result2), .result(result));
 	
 endmodule
+
+module sram_sp_test #(parameter WORD_WIDTH = 128, parameter ADDR_WIDTH = 11) (QA, CLKA, CENA, WENA, AA, DA);
+output reg [WORD_WIDTH-1:0] QA;   
+input                     CLKA;
+input                     CENA;
+input                     WENA;
+input      [ADDR_WIDTH-1:0] AA;
+input      [WORD_WIDTH-1:0] DA;
+
+localparam WIDTH = WORD_WIDTH;
+localparam DEPTH = 1 << (ADDR_WIDTH);
+
+reg [WIDTH-1:0] data [0:DEPTH-1];
+wire INVALIDA = AA >= DEPTH;
+
+always@(posedge CLKA) begin
+    QA <= ~CENA & WENA & ~INVALIDA ? data[AA] : 128'dz;
+    if(~WENA & ~CENA & ~INVALIDA) begin
+        data[AA] <= DA;
+    end
+end
+endmodule
 `endif
