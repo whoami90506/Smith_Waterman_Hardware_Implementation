@@ -39,6 +39,20 @@ module myMax4 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	
 endmodule
 
+module myMax8 #(parameter DATA_WIDTH = `V_E_F_Bit) (
+	input [DATA_WIDTH*8 -1 : 0] in,
+	output [DATA_WIDTH-1 : 0] result
+		
+);
+	wire [DATA_WIDTH-1 : 0] result1, result2;
+	myMax4 #(.DATA_WIDTH(DATA_WIDTH)) m1(.a(in[DATA_WIDTH-1 : 0]), .b(in[DATA_WIDTH*2-1:DATA_WIDTH]),
+		.c(in[DATA_WIDTH*3-1 : DATA_WIDTH*2]), .d(in[DATA_WIDTH*4-1 : DATA_WIDTH*3]), .result(result1));
+	myMax4 #(.DATA_WIDTH(DATA_WIDTH)) m2(.a(in[DATA_WIDTH*5-1 : DATA_WIDTH*4]), .b(in[DATA_WIDTH*6-1:DATA_WIDTH*5]),
+		.c(in[DATA_WIDTH*7-1 : DATA_WIDTH*6]), .d(in[DATA_WIDTH*8-1 : DATA_WIDTH*7]), .result(result2));
+	myMax  #(.DATA_WIDTH(DATA_WIDTH)) mFinal(.a(result1), .b(result2), .result(result));
+	
+endmodule
+
 module sram_sp_test #(parameter WORD_WIDTH = 128, parameter ADDR_WIDTH = 11) (QA, CLKA, CENA, WENA, AA, DA);
 output reg [WORD_WIDTH-1:0] QA;   
 input                     CLKA;
