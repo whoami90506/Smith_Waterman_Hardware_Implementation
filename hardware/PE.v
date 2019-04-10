@@ -3,11 +3,12 @@
 `define PE
 `include "util.v"
 
-module PE(clk, rst, newLineIn, newLineOut, s, tIn, tOut, vIn, vIn_alpha, vOut, vOut_alpha, fIn, fOut, minusAlpha, minusBeta, match, mismatch);
+module PE(clk, rst, enable, newLineIn, newLineOut, s, tIn, tOut, vIn, vIn_alpha, vOut, vOut_alpha, fIn, fOut, minusAlpha, minusBeta, match, mismatch);
 
 //Input & Output
 input clk;
 input rst;
+input enable;
 input newLineIn;
 output reg newLineOut;
 
@@ -18,6 +19,7 @@ input [`V_E_F_Bit-1 : 0] minusAlpha, minusBeta, match, mismatch;
 input [`V_E_F_Bit-1 : 0 ] vIn, vIn_alpha, fIn;
 output reg [`V_E_F_Bit-1 : 0] vOut, vOut_alpha, fOut;
 
+reg _enable;
 //memory
 reg [`V_E_F_Bit-1 : 0] vDiag_reg, preE;
 
@@ -28,10 +30,11 @@ assign vDiag_real = newLineIn ? {`V_E_F_Bit{1'b0}} : vDiag_reg;
 assign diag = vDiag_real + LUT;
 
 //up
-wire [`V_E_F_Bit-1 : 0] preE_real, E_beta, eOut;
+wire [`V_E_F_Bit-1 : 0] preE_real, E_beta, eOut, vOut_alpha_real;
 assign preE_real = newLineIn ? {`V_E_F_Bit{1'b0}} : preE;
 assign E_beta = preE_real + minusBeta;
-myMax calE(.a(E_beta), .b(vOut_alpha), .result(eOut));
+assign vOut_alpha_real = newLineIn ? minusAlpha : vOut_alpha;
+myMax calE(.a(E_beta), .b(vOut_alpha_real), .result(eOut));
 
 //left
 wire [`V_E_F_Bit-1 : 0] fIn_alpha, n_fOut, fIn_beta;
@@ -54,17 +57,20 @@ always @(posedge clk or negedge rst) begin
 		 //memory
 		 vDiag_reg <= {`V_E_F_Bit-1{1'b0}};
 		 preE <= {`V_E_F_Bit{1'b0}};
+
+		 _enable <= 1'b0;
 	end else begin
 		//IO
-		 newLineOut <= newLineIn;
-		 tOut <= tIn;
-		 fOut <= n_fOut;
-		 vOut <= n_vOut;
-		 vOut_alpha <= n_vOut_alpha;
+		 newLineOut <=  _enable ? newLineIn : 1'b0;
+		 tOut <= _enable ? tIn : 2'd0;
+		 fOut <= _enable ? n_fOut : `V_E_F_Bit'd0;
+		 vOut <= _enable ? n_vOut : `V_E_F_Bit'd0;
+		 vOut_alpha <= _enable ? n_vOut_alpha : `V_E_F_Bit'd0;
 		 //memory
-		 vDiag_reg <= vIn;
-		 preE <= eOut;
+		 vDiag_reg <= _enable ? vIn : `V_E_F_Bit'd0;
+		 preE <= _enable ? eOut : `V_E_F_Bit'd0;
 
+		 _enable <= enable;
 	end
 end
 
