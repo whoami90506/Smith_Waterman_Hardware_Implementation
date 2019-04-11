@@ -54,7 +54,7 @@ always @(posedge clk or negedge rst) begin
 		 fOut <= {`V_E_F_Bit{1'b0}};
 		 vOut <= {`V_E_F_Bit{1'b0}};
 		 vOut_alpha <= {`V_E_F_Bit{1'b0}};
-		 //memory
+		 //memory 
 		 vDiag_reg <= {`V_E_F_Bit-1{1'b0}};
 		 preE <= {`V_E_F_Bit{1'b0}};
 
