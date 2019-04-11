@@ -4,38 +4,38 @@
 
 `include "PE.v"
 
-module PEArray (
+module PEArray2 (
 	input clk,    // Clock
-	input rst_n  // Asynchronous reset active low
-	
+	input rst_n,  // Asynchronous reset active low
+	input [1:0] enable,
+	input newLineIn,
+	output newLineOut,
+	input [3:0] s,
+	input [1:0] tIn,
+	output [1:0] tOut,
+	input [`V_E_F_Bit-1:0] vIn,
+	output [`V_E_F_Bit-1:0] vOut,
+	input [`V_E_F_Bit-1:0] vIn_alpha,
+	output [`V_E_F_Bit-1:0] vOut_alpha,
+	input [`V_E_F_Bit-1:0] fIn,
+	output [`V_E_F_Bit-1:0] fOut,
+	input [`V_E_F_Bit-1:0] minusAlpha,
+	input [`V_E_F_Bit-1:0] minusBeta,
+	input [`V_E_F_Bit-1:0] match,
+	input [`V_E_F_Bit-1:0] mismatch,
+	output [`V_E_F_Bit-1:0] result
 );
 
-//IO
-reg [`V_E_F_Bit-1:0] minusAlpha_r, minusBeta_r, match_r, mismatch_r, minusAlpha_w, minusBeta_w, match_w, mismatch_w;
+wire newLine_w;
+wire [1:0] t_w;
+wire [`V_E_F_Bit-1:0] v_w, v_alpha_w, f_w;
 
-//PE======================================
-//transport line
-wire PE_newline [0:`ARRAY_LENGTH];
-wire [1:0] PE_t [0:`ARRAY_LENGTH];
-wire [`V_E_F_Bit-1:0] PE_v [0:`ARRAY_LENGTH];
-wire [`V_E_F_Bit-1:0] PE_v_alpha [0:`ARRAY_LENGTH];
-wire [`V_E_F_Bit-1:0] PE_f [0:`ARRAY_LENGTH];
-
-//reg
-reg [1:0] PE_s [0:`ARRAY_LENGTH-1];
-reg [1:0] n_PE_s [0:`ARRAY_LENGTH-1];
-reg PE_enable [0:`ARRAY_LENGTH-1];
-reg n_PE_enable [0:`ARRAY_LENGTH-1];
-
-generate
-	genvar idx;
-	for (idx = 0; idx < `ARRAY_LENGTH; idx = idx+1) begin : PEArray
-		PE PE_idx (.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), .newLineIn(PE_newline[idx]), .newLineOut(PE_newline[idx+1]),
-			.s(PE_s[idx]), .tIn(PE_t[idx]), .tOut(PE_t[idx+1]), .vIn(PE_v[idx]), .vOut(PE_v[idx+1]),
-			.vIn_alpha(PE_v_alpha[idx]), .vOut_alpha(PE_v_alpha[idx+1]), .fIn(PE_f[idx]),
-			.fOut(PE_f[idx+1]), .minusAlpha(minusAlpha_r), .minusBeta (minusBeta_r), .match(match_r), .mismatch(mismatch_r));
-
-	end
-endgenerate
+PE PE_1 (.clk(clk), .rst(rst_n), .enable(enable[0]), .newLineIn(newLineIn), .newLineOut(newLine_w), .s(s[1:0]), .tIn(tIn), 
+	.tOut(t_w), .vIn(vIn), .vOut(v_w), .vIn_alpha(vIn_alpha), .vOut_alpha(v_alpha_w), .fIn(fIn), .fOut(f_w), 
+	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch));
+PE PE_2 (.clk(clk), .rst(rst_n), .enable(enable[1]), .newLineIn(newLine_w), .newLineOut(newLineOut), .s(s[3:2]), .tIn(t_w), 
+	.tOut(tOut), .vIn(v_w), .vOut(vOut), .vIn_alpha(v_alpha_w), .vOut_alpha(vOut_alpha), .fIn(f_w), .fOut(fOut), 
+	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch));
+myMax ans (.a     (v_w), .b     (vOut), .result(result));
 endmodule
 `endif
