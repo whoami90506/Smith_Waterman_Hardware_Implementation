@@ -65,10 +65,10 @@ wire newLine_w;
 wire [1:0] t_w;
 wire [`V_E_F_Bit-1:0] v_w, v_alpha_w, f_w, result1, result2;
 
-PEArray2 PE_1 (.clk(clk), .rst(rst_n), .enable(enable[1:0]), .newLineIn(newLineIn), .newLineOut(newLine_w), .s(s[3:0]), .tIn(tIn), 
+PEArray2 PE_1 (.clk(clk), .rst_n(rst_n), .enable(enable[1:0]), .newLineIn(newLineIn), .newLineOut(newLine_w), .s(s[3:0]), .tIn(tIn), 
 	.tOut(t_w), .vIn(vIn), .vOut(v_w), .vIn_alpha(vIn_alpha), .vOut_alpha(v_alpha_w), .fIn(fIn), .fOut(f_w), 
 	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch), .result(result1));
-PEArray2 PE_2 (.clk(clk), .rst(rst_n), .enable(enable[3:2]), .newLineIn(newLine_w), .newLineOut(newLineOut), .s(s[7:4]), .tIn(t_w), 
+PEArray2 PE_2 (.clk(clk), .rst_n(rst_n), .enable(enable[3:2]), .newLineIn(newLine_w), .newLineOut(newLineOut), .s(s[7:4]), .tIn(t_w), 
 	.tOut(tOut), .vIn(v_w), .vOut(vOut), .vIn_alpha(v_alpha_w), .vOut_alpha(vOut_alpha), .fIn(f_w), .fOut(fOut), 
 	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch), .result(result2));
 myMax ans (.a     (result1), .b     (result2), .result(result));
@@ -100,10 +100,10 @@ wire newLine_w;
 wire [1:0] t_w;
 wire [`V_E_F_Bit-1:0] v_w, v_alpha_w, f_w, result1, result2;
 
-PEArray4 PE_1 (.clk(clk), .rst(rst_n), .enable(enable[3:0]), .newLineIn(newLineIn), .newLineOut(newLine_w), .s(s[7:0]), .tIn(tIn), 
+PEArray4 PE_1 (.clk(clk), .rst_n(rst_n), .enable(enable[3:0]), .newLineIn(newLineIn), .newLineOut(newLine_w), .s(s[7:0]), .tIn(tIn), 
 	.tOut(t_w), .vIn(vIn), .vOut(v_w), .vIn_alpha(vIn_alpha), .vOut_alpha(v_alpha_w), .fIn(fIn), .fOut(f_w), 
 	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch), .result(result1));
-PEArray4 PE_2 (.clk(clk), .rst(rst_n), .enable(enable[7:4]), .newLineIn(newLine_w), .newLineOut(newLineOut), .s(s[15:8]), .tIn(t_w), 
+PEArray4 PE_2 (.clk(clk), .rst_n(rst_n), .enable(enable[7:4]), .newLineIn(newLine_w), .newLineOut(newLineOut), .s(s[15:8]), .tIn(t_w), 
 	.tOut(tOut), .vIn(v_w), .vOut(vOut), .vIn_alpha(v_alpha_w), .vOut_alpha(vOut_alpha), .fIn(f_w), .fOut(fOut), 
 	.minusAlpha(minusAlpha), .minusBeta (minusBeta), .match(match), .mismatch(mismatch), .result(result2));
 myMax ans (.a     (result1), .b     (result2), .result(result));
