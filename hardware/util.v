@@ -6,7 +6,7 @@
 `define Alpha_Beta_Bit 8
 `define V_E_F_Bit 17 // 16 value + 1 signed
 `define Match_bit  3 // 3 value
-`define Max_T_bit 14
+`define Max_T_bit 13
 
 //SRAM
 `define Sram_Word_Bit 128
