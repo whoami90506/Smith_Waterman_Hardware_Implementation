@@ -5,8 +5,7 @@
 //input
 `define Alpha_Beta_Bit 8
 `define V_E_F_Bit  16
-`define Match_bit  8
-`define ARRAY_LENGTH 64
+`define Match_bit  3
 
 module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	input  [DATA_WIDTH-1 : 0 ] a,
@@ -19,8 +18,9 @@ module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	assign apbn = (~a[DATA_WIDTH -1]) & ( b[DATA_WIDTH -1]);
 	assign anbn = ( a[DATA_WIDTH -1]) & ( b[DATA_WIDTH -1]);
 
-	assign chooseA = apbn | (apbp & compare) | (anbn & (~compare));
-	assign result = chooseA ? a : b;
+	assign chooseA = apbn | (apbp & compare);
+	assign result = anbn ? {DATA_WIDTH{1'b0}} :
+					chooseA ? a : b;
 	
 endmodule
 
