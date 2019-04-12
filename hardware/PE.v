@@ -42,9 +42,10 @@ assign fIn_beta = fIn + minusBeta;
 myMax calF(.a(vIn_alpha), .b(fIn_beta), .result(n_fOut));
 
 //compute v
-wire [`V_E_F_Bit-1 : 0] posDiag, maxEF, n_vOut, n_vOut_alpha;
-myMax4 ans(.a(diag), .b(eOut), .c(n_fOut), .d(`V_E_F_Bit'b0), .result(n_vOut));
-assign n_vOut_alpha = n_vOut + minusAlpha;
+wire [`V_E_F_Bit-1 : 0] posDiag, maxEF, n_vOut, n_vOut_alpha, result;
+myMax4 ans(.a(diag), .b(eOut), .c(n_fOut), .d(`V_E_F_Bit'b0), .result(result));
+assign n_vOut = result;
+assign n_vOut_alpha = result + minusAlpha;
 
 always @(posedge clk or negedge rst) begin
 	if(~rst) begin
