@@ -8,6 +8,7 @@ module SramController (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
 	output reg busy,
+	input init,
 
 	//sram host
 	input [`Sram_Word_Bit-1:0] readData_s, //QA
