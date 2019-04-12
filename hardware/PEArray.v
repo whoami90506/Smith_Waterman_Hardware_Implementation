@@ -1,6 +1,6 @@
-`ifdef PEARRAY
+`ifdef PE_ARRAY
 `else
-`define PEARRAY
+`define PE_ARRAY
 
 `include "PE.v"
 
