@@ -4,8 +4,16 @@
 
 //input
 `define Alpha_Beta_Bit 8
-`define V_E_F_Bit  16
-`define Match_bit  3
+`define V_E_F_Bit 17 // 16 value + 1 signed
+`define Match_bit  3 // 3 value
+`define Max_T_bit 14
+
+//SRAM
+`define Sram_Word_Bit 128
+`define Sram_Addr_Bit 11
+
+//PEARRAY
+`define PE_Array_size 64
 
 module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	input  [DATA_WIDTH-1 : 0 ] a,
