@@ -2,7 +2,7 @@
 `else
 `define PE_ARRAY_CONTROLLER
 
-`include "PEArray.v"
+`include "PE.v"
 
 module PEArrayController (
 	input clk,    // Clock
