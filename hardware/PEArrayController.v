@@ -6,7 +6,7 @@
 
 module PEArrayController (
 	input clk,    // Clock
-	input rst_n  // Asynchronous reset active low
+	input rst_n,  // Asynchronous reset active low
 
 	//S & T
 	output reg requestS,
@@ -35,4 +35,5 @@ module PEArrayController (
 	output reg [`V_E_F_Bit-1:0] result,
 	output reg outValid
 );
+endmodule // PEArrayController
 `endif
