@@ -2,17 +2,26 @@
 `else
 `define UTIL
 
+//SRAM
+`define Sram_Word_Bit 128
+`define Sram_Addr 2048
+`define Sram_Addr_Bit $clog2(Sram_Addr)
+`define T_per_word 3
+
+//PEARRAY
+`define PE_Array_size 64
+`define PE_Array_size_log $clog2(`PE_Array_size)
+
+//Top
+`define TOP_STATE_BIT 2
+
 //input
 `define Alpha_Beta_Bit 8
 `define V_E_F_Bit 17 // 16 value + 1 signed
 `define Match_bit  3 // 3 value
+`define Max_T_size `Sram_Addr * `T_per_word
+`define Max_T_size_log $clog2(`Max_T_size)
 
-//SRAM
-`define Sram_Word_Bit 128
-`define Sram_Addr_Bit 11
-
-//PEARRAY
-`define PE_Array_size 64
 
 module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	input  [DATA_WIDTH-1 : 0 ] a,
