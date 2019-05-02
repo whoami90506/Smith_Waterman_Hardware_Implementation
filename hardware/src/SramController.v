@@ -2,7 +2,7 @@
 `else
 `define SRAM_CONTROLLER
 
-`include "util.v"
+`include "src/util.v"
 
 module SramController (
 	input clk,    // Clock
@@ -24,8 +24,7 @@ module SramController (
 	input [`Sram_Word_Bit-1:0] writeData_h,
 
 	//main get T
-	input [`User_Bit_Width-1:0] tIn,
-	input [`User_Bit_Width_Log:0] tEnable
+	input [`7:0] tIn
 );
 
 sram_sp_test #(.WORD_WIDTH(`Sram_Word_Bit), .ADDR_WIDTH(`Sram_Addr_Bit)) sram 

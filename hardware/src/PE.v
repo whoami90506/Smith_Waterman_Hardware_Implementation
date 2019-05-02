@@ -1,7 +1,7 @@
 `ifdef PE
 `else 
 `define PE
-`include "util.v"
+`include "src/util.v"
 
 module PE(clk, rst, enable, lock, newLineIn, newLineOut, s, tIn, tOut, vIn, vIn_alpha, vOut, vOut_alpha, fIn, fOut, minusAlpha, minusBeta, match, mismatch);
 
