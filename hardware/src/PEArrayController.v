@@ -23,10 +23,10 @@ module PEArrayController (
 
 	//sram
 	output reg o_readSram,
-	input [`Sram_Word_Bit-1:0] i_readData,
+	input [`Sram_Word-1:0] i_readData,
 	input i_readValid,
 	output reg o_writeSram,
-	output reg [`Sram_Word_Bit-1:0] o_writeData,
+	output reg [`Sram_Word-1:0] o_writeData,
 
 	//top
 	input [`TOP_STATE_BIT-1 :0] i_top_state,
