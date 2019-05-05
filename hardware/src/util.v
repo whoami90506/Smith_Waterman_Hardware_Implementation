@@ -9,19 +9,21 @@
 `define Sram_Addr_log $clog2(`Sram_Addr)
 `define T_per_word 7
 
+//parameter setting
+`define Alpha_Beta_Bit 8
+`define V_E_F_Bit 18 // 17 value + 1 signed
+`define Match_bit  4 // 4 value
+
+`define Max_T_size `Sram_Addr * `T_per_word
+`define Max_T_size_log $clog2(`Max_T_size)
+`define HEADER_BIT  4 //`Sram_Word - (`V_E_F_Bit*2) * `T_per_word
+
 //PEARRAY
 `define PE_Array_size 64
 `define PE_Array_size_log $clog2(`PE_Array_size)
 
 //Top
 `define TOP_STATE_BIT 2
-
-//input
-`define Alpha_Beta_Bit 8
-`define V_E_F_Bit 18 // 17 value + 1 signed
-`define Match_bit  4 // 4 value
-`define Max_T_size `Sram_Addr * `T_per_word
-`define Max_T_size_log $clog2(`Max_T_size)
 
 
 module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
@@ -70,7 +72,7 @@ module myMax8 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 		.c(in[DATA_WIDTH*7-1 : DATA_WIDTH*6]), .d(in[DATA_WIDTH*8-1 : DATA_WIDTH*7]), .result(result2));
 	myMax  #(.DATA_WIDTH(DATA_WIDTH)) mFinal(.a(result1), .b(result2), .result(n_result));
 
-	always @(posedge clk or negedge rst_n) begin :
+	always @(posedge clk or negedge rst_n) begin
 		if(~rst_n) result <= {DATA_WIDTH{1'b0}};
 		else result <= n_result;
 	end
