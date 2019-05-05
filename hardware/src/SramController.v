@@ -126,7 +126,6 @@ always @(*) begin
 					//IO
 					n_o_request_data = 1'd0;
 					n_o_busy = 1'd1;
-
 				end else begin //i_start_read_t
 					n_isRequesting = 1'd0;
 					n_readAddr = {`Sram_Addr_log{1'd0}};
@@ -145,7 +144,6 @@ always @(*) begin
 
 							//IO
 							n_o_busy = 1'd0;
-
 						end else begin  //not last
 							//control
 							n_state = SETT;
@@ -158,7 +156,6 @@ always @(*) begin
 
 							//IO
 							n_o_busy = 1'd1;
-
 						end
 					end else begin  //i_start_read_t not valid
 
@@ -177,8 +174,58 @@ always @(*) begin
 				end
 			end else begin //normal read write
 
+				//control
+				if(o_request_data[`Sram_Word-1]) n_isRequesting = 1'd0;
+
+				if(i_PE_send) begin
+					if(writeAddr == dataAddr) begin
+						SramWrite(writeAddr, {header, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
+						n_writeAddr = 0;
+					end else begin
+						SramWrite(writeAddr, {{`HEADER_BIT{1'd0}}, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
+						n_writeAddr = writeAddr+1;
+					end
+					
+				end else if (i_PE_request | ~(isRequesting)) begin
+					SramRead(readAddr);
+					n_readAddr = (readAddr == dataAddr) ? 0 : readAddr +1;
+					n_isRequesting = 1'd1;
+				end
 			end
 
+		end //IDLE
+
+		SETT : begin
+			n_o_busy = 1'd1;
+
+			if(i_t[17]) begin //i_start_read_t valid
+				SramWrite(dataAddr, T_to_word(i_t));
+
+				if(i_t[16:14]) begin //last
+					//control
+					n_state = IDLE;
+					n_header = i_t[17:14];
+
+					//Sram addr
+					n_o_T_size = o_T_size + i_t[16:14];
+
+					//IO
+					n_o_busy = 1'd0;
+				end else begin  //not last
+					
+					if(dataAddr == {`Sram_Addr_log{1'b1}}) begin // full
+						SramWrite(dataAddr, T_to_word(i_t) | {4'b111, {(`Sram_Word -4){1'b0}}});
+
+						n_state = IDLE;
+						n_header = 4'b111;
+						n_o_T_size = o_T_size + `T_per_word;
+						n_o_busy = 1'd0;
+					end else begin
+						n_dataAddr = dataAddr +1;
+						n_o_T_size = o_T_size + `T_per_word;
+					end
+				end
+			end
 		end
 		
 	endcase
