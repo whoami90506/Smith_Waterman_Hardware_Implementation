@@ -49,7 +49,7 @@ localparam INIT_WRITE = 2'd3;
 
 reg [1:0] state , n_state;
 reg [`HEADER_BIT-1 : 0] header, n_header;
-reg isRequesting, n_isRequesting;
+reg [1:0] isRequesting, n_isRequesting;
 
 //addr
 reg [`Sram_Addr_log-1 : 0] readAddr, writeAddr, dataAddr, n_readAddr, n_writeAddr, n_dataAddr;
@@ -107,7 +107,7 @@ always @(*) begin
 	n_o_T_size = o_T_size;
 
 	//IO
-	n_o_request_data = o_request_data;
+	n_o_request_data = 0;
 	n_o_busy = 1'd0;
 
 	case (state)
@@ -124,7 +124,6 @@ always @(*) begin
 					n_writeAddr = {`Sram_Addr_log{1'd0}};
 
 					//IO
-					n_o_request_data = 1'd0;
 					n_o_busy = 1'd1;
 				end else begin //i_start_read_t
 					n_isRequesting = 1'd0;
@@ -175,24 +174,25 @@ always @(*) begin
 			end else begin //normal read write
 
 				//control
-				if(o_request_data[`Sram_Word-1]) n_isRequesting = 1'd0;
+				if(isRequesting)n_isRequesting = (isRequesting == 2'd3) ? 2'd0 : isRequesting + 2'd1;
 
 				if(i_PE_send) begin
 					if(writeAddr == dataAddr) begin
 						SramWrite(writeAddr, {header, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
 						n_writeAddr = 0;
 					end else begin
-						SramWrite(writeAddr, {{`HEADER_BIT{1'd0}}, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
+						SramWrite(writeAddr, {1'd1, {(`HEADER_BIT-1){1'd0}}, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
 						n_writeAddr = writeAddr+1;
 					end
 					
-				end else if (i_PE_request | ~(isRequesting)) begin
+				end else if (i_PE_request & isRequesting == 2'd0) begin
 					SramRead(readAddr);
 					n_readAddr = (readAddr == dataAddr) ? 0 : readAddr +1;
-					n_isRequesting = 1'd1;
+					n_isRequesting = 2'd1;
 				end
-			end
 
+				if(isRequesting == 2'd2) n_o_request_data = Q;
+			end
 		end //IDLE
 
 		SETT : begin
@@ -226,6 +226,9 @@ always @(*) begin
 					end
 				end
 			end
+		end //SETT
+
+		INIT_READ : begin
 		end
 		
 	endcase
@@ -236,7 +239,7 @@ always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		//control
 		state <= IDLE;
-		isRequesting <= 1'd0;
+		isRequesting <= 2'd0;
 		header <= 4'd8;
 		readAddr <= 0;
 		writeAddr <= 0;
@@ -254,6 +257,23 @@ always @(posedge clk or negedge rst_n) begin
 		D <= 0;
 
 	end else begin
+		state <= n_state;
+		isRequesting <= n_isRequesting;
+		header <= n_header;
+		readAddr <= n_readAddr;
+		writeAddr <= n_writeAddr;
+		dataAddr <= n_dataAddr;
+
+		//input output
+		o_request_data <= n_o_request_data;
+		o_busy <= n_o_busy;
+		o_T_size <= n_o_T_size;
+
+		//Sram
+		CEN <= n_CEN;
+		WEN <= n_WEN;
+		A <= n_A;
+		D <= n_D;
 	end
 end
 endmodule
