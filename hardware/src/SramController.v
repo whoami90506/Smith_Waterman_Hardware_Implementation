@@ -42,12 +42,13 @@ generate
 endgenerate
 
 //control
-localparam IDLE = 2'd0;
-localparam SETT = 2'd1;
-localparam INIT_READ = 2'd2;
-localparam INIT_WRITE = 2'd3;
+localparam IDLE = 3'd0;
+localparam SETT = 3'd1;
+localparam INIT_READ = 3'd4;
+localparam INIT_TEMP = 3'd5;
+localparam INIT_WRITE = 3'd6;
 
-reg [1:0] state , n_state;
+reg [2:0] state , n_state;
 reg [`HEADER_BIT-1 : 0] header, n_header;
 reg [1:0] isRequesting, n_isRequesting;
 
@@ -92,6 +93,12 @@ function [`Sram_Word-1 : 0 ] T_to_word;
 					  in[ 1: 0], {((`V_E_F_Bit -1)*2){1'd0}}};
 endfunction
 
+function [`Sram_Word-1 : 0 ] word_reset;
+	input [`Sram_Word-1:0] in;
+	word_reset = {in[255:252], in[251:250], 34'd0, in[215:214], 34'd0, in[179:178], 34'd0, in[143:142], 34'd0,
+	 						   in[107:106], 34'd0, in[ 71: 70], 34'd0, in[ 35: 34], 34'd0};
+endfunction
+
 always @(*) begin
 
 	//controll
@@ -116,7 +123,7 @@ always @(*) begin
 				if(i_init) begin
 					//controll
 					n_state = INIT_READ;
-					n_isRequesting = 1'd0;
+					n_isRequesting = 2'd0;
 
 					//Sram && addr
 					SramRead({`Sram_Addr_log{1'd0}});
@@ -182,7 +189,7 @@ always @(*) begin
 						n_writeAddr = 0;
 					end else begin
 						SramWrite(writeAddr, {1'd1, {(`HEADER_BIT-1){1'd0}}, i_send_data[`Sram_Word - `HEADER_BIT -1 : 0]});
-						n_writeAddr = writeAddr+1;
+						n_writeAddr = (writeAddr == dataAddr) ? 0 : writeAddr+1;
 					end
 					
 				end else if (i_PE_request & isRequesting == 2'd0) begin
@@ -213,11 +220,11 @@ always @(*) begin
 					n_o_busy = 1'd0;
 				end else begin  //not last
 					
-					if(dataAddr == {`Sram_Addr_log{1'b1}}) begin // full
+					if(dataAddr == {`Sram_Addr_log{1'b1}} ) begin // full
 						SramWrite(dataAddr, T_to_word(i_t) | {4'b111, {(`Sram_Word -4){1'b0}}});
 
 						n_state = IDLE;
-						n_header = 4'b111;
+						n_header = 4'b1111;
 						n_o_T_size = o_T_size + `T_per_word;
 						n_o_busy = 1'd0;
 					end else begin
@@ -229,6 +236,58 @@ always @(*) begin
 		end //SETT
 
 		INIT_READ : begin
+			//controll
+			n_state = INIT_TEMP;
+			n_isRequesting = 2'd0;
+
+			//Sram && addr
+			SramNop;
+
+			//IO
+			n_o_busy = 1'd1;
+		end//INIT_READ
+
+		INIT_TEMP : begin
+			//control
+			n_state = (readAddr == dataAddr) ? IDLE : INIT_WRITE;
+			n_isRequesting = 2'd0;
+
+			//Sram && addr
+			SramWrite(readAddr, word_reset(Q));
+			n_readAddr = (readAddr == dataAddr) ? 0 : readAddr +1;
+
+			//IO
+			n_o_busy = (readAddr != dataAddr);
+		end //INIT_TEMP
+
+		INIT_WRITE : begin 
+			//control
+			n_state = INIT_READ;
+			n_isRequesting = 2'd0;
+
+			//Sram && addr
+			SramRead(readAddr);
+
+			//IO
+			n_o_busy = 1'b1;
+		end
+
+		default : begin
+			//controll
+			n_state = state;
+			n_header = header;
+			n_isRequesting = isRequesting;
+
+			//sram && addr
+			SramNop;
+			n_readAddr = readAddr;
+			n_writeAddr = writeAddr;
+			n_dataAddr = dataAddr;
+			n_o_T_size = o_T_size;
+
+			//IO
+			n_o_request_data = 0;
+			n_o_busy = 1'd0;
 		end
 		
 	endcase

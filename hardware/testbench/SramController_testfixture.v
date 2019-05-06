@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 `define CYCLE    20           	        // Modify your clock period here
-`define TERMINATION  5000
-`define SEQUENCE "testbench/sram_t01.dat"
+`define TERMINATION  50000
+`define ERROR_SUM 10
+`define SEQUENCE "testbench/dat/sram_t01.dat"
 
 //`include "src/util.v"
 `include "src/SramController.v"
@@ -25,6 +26,7 @@ SramController Top(.clk(clk), .rst_n(reset), .i_PE_request(i_PE_request), .o_req
 	.i_t(i_t), .o_busy(o_busy), .o_T_size(o_T_size));
 
 integer num, err, stage;
+reg down;
 integer i;
 reg [17:0]   t_mem   [0:`Sram_Addr-1];
 reg [`V_E_F_Bit-2 : 0] idx;
@@ -56,6 +58,7 @@ initial begin
    stage       = 0; 
    idx         = 0; 
    num         = 0; 
+   down        = 0;
    i           = 0;
 
    i_PE_request = 1'd0;
@@ -76,22 +79,13 @@ initial begin
    
    @(negedge o_busy);
    stage = 1;
-   $display("=======");
+   $display("============================================================================");
    $display("STAGE 1");
-   $display("=======");                               
-end
-
-initial begin
-	#(`TERMINATION * `CYCLE);
-	$display("================================================================================================================");
-	$display("(/`n`)/ ~#  There is something wrong with your code!!"); 
-	$display("Time out!! The simulation didn't finish after %d cycles!!, Please check it!!!", `TERMINATION); 
-	$display("================================================================================================================");
-	#`CYCLE $finish;
+   $display("============================================================================");                             
 end  
 
 always @(negedge clk) begin
-	if(o_busy) begin
+	if(o_busy && stage == 0) begin
 		i_t = t_mem[num];
 		num = num +1;
 	end
@@ -104,8 +98,13 @@ always @(negedge clk) begin
 
 		if(o_request_data[`Sram_Word-1]) begin
 			idx = 0;
-			if(o_request_data != T_to_ans(t_mem[i])) begin
-				$display("ERROR at %d: t_in %h", i, t_mem[i]);
+			if(o_request_data != T_to_ans(t_mem[i]) && 
+			~(i === `Sram_Addr-1
+			&& (t_mem[i] >> 14) === 4'd8
+			&& o_request_data[`Sram_Word-1:`Sram_Word-4] === 4'hf
+			&& (o_request_data[`Sram_Word-5 : 0]) === (T_to_ans(t_mem[i]) & {(`Sram_Word-4){1'd1}})
+			)) begin
+				$display("ERROR at %d: t_in %b", i, t_mem[i]);
 				$display("expect %h, get %h",T_to_ans(t_mem[i]), o_request_data);
 				err = err +1;
 			end
@@ -119,9 +118,9 @@ always @(negedge clk) begin
 				idx = 0;
 				i_PE_request = 1'd0;
 				stage = 2;
-				$display("=======");
+				$display("============================================================================");
    				$display("STAGE 2");
-   				$display("======="); 
+   				$display("============================================================================");
 			end
 		end
 
@@ -130,8 +129,13 @@ always @(negedge clk) begin
 		i_PE_send = 1'd0;
 
 		if(o_request_data[`Sram_Word-1]) begin
-			if(o_request_data != T_to_ans(t_mem[i])) begin
-				$display("ERROR at %d: t_in %h", i, t_mem[i]);
+			if(o_request_data != T_to_ans(t_mem[i]) && 
+			~(i === `Sram_Addr-1
+			&& (t_mem[i] >> 14) === 4'd8
+			&& o_request_data[`Sram_Word-1:`Sram_Word-4] === 4'hf
+			&& (o_request_data[`Sram_Word-5 : 0]) === (T_to_ans(t_mem[i]) & {(`Sram_Word-4){1'd1}})
+			)) begin
+				$display("ERROR at %d: t_in %b", i, t_mem[i]);
 				$display("expect %h, get %h",T_to_ans(t_mem[i]), o_request_data);
 				err = err +1;
 			end
@@ -139,25 +143,89 @@ always @(negedge clk) begin
 			i = i+1;
 
 			if(i == num) begin
-				i = 0;
 				idx = 0;
 				i_PE_request = 1'd0;
 				stage = 3;
-				# `CYCLE $finish;
-				 
+				i_init = 1'd1;
+				$display("============================================================================");
+   				$display("STAGE 3");
+   				$display("============================================================================");
+   				i = 0;
+			end
+		end
+	end else if (stage == 3) begin
+		i_init = 1'd0;
+
+		if(~o_busy) begin
+		
+			i_PE_request = 1'd1;
+			i_PE_send = 1'd0;
+
+			if(o_request_data[`Sram_Word-1]) begin
+				if(o_request_data != T_to_ans(t_mem[i]) && 
+				~(i === `Sram_Addr-1
+				&& (t_mem[i] >> 14) === 4'd8
+				&& o_request_data[`Sram_Word-1:`Sram_Word-4] === 4'hf
+				&& (o_request_data[`Sram_Word-5 : 0]) === (T_to_ans(t_mem[i]) & {(`Sram_Word-4){1'd1}})
+				))begin
+					$display("ERROR at %d: t_in %b", i, t_mem[i]);
+					$display("expect %h, get %h",T_to_ans(t_mem[i]), o_request_data);
+					err = err +1;
+				end
+				i = i+1;
+
+				if(i == num) begin
+					i = 0;
+					idx = 0;
+					i_PE_request = 1'd0;
+					stage = 4;
+					down = 1;
+				end
 			end
 		end
 	end
 end
 
 always @(*) begin 
-	if(err >= 10) begin
+	if(err >= `ERROR_SUM) begin
 		$display("================================================================================================================");
-		$display("There are more than 10 errors in the code!!!"); 
+		$display("There are more than %d errors in the code!!!", `ERROR_SUM); 
 		$display("================================================================================================================");
 		$finish;
 	end
 
+end
+
+initial begin
+	#(`TERMINATION * `CYCLE);
+	$display("================================================================================================================");
+	$display("(/`n`)/ ~#  There is something wrong with your code!!"); 
+	$display("Time out!! The simulation didn't finish after %d cycles!!, Please check it!!!", `TERMINATION); 
+	$display("================================================================================================================");
+	#`CYCLE $finish;
+end
+
+initial begin
+	@(posedge down);
+	if(err) begin
+		$display("============================================================================");
+     	$display("\n (T_T) ERROR found!! There are %d errors in total.\n", err);
+        $display("============================================================================");
+	end else begin
+		$display("============================================================================");
+        $display("\n");
+        $display("        ****************************              ");
+        $display("        **                        **        /|__/|");
+        $display("        **  Congratulations !!    **      / O,O  |");
+        $display("        **                        **    /_____   |");
+        $display("        **  Simulation Complete!! **   /^ ^ ^ \\  |");
+        $display("        **                        **  |^ ^ ^ ^ |w|");
+        $display("        *************** ************   \\m___m__|_|");
+        $display("\n");
+        $display("============================================================================");
+	end
+
+	# `CYCLE $finish;
 end
 
 endmodule
