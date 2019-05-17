@@ -9,18 +9,18 @@ module SramController (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
 	
-	//PE
+	//DataProcessor
 	input i_PE_request,
 	output reg [`Sram_Word-1:0] o_request_data,
 	input i_PE_send, 
 	input [`Sram_Word-1:0] i_send_data,
-
-	//top
+	output reg [`Max_T_size_log-1 : 0] o_T_size,
 	input i_init,
+	
+	//top
 	input i_start_read_t,
 	input [17:0] i_t,
-	output reg o_busy,
-	output reg [`Max_T_size_log-1 : 0] o_T_size
+	output reg o_busy
 );
 
 //input output

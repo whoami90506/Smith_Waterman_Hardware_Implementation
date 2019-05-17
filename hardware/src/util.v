@@ -2,6 +2,8 @@
 `else
 `define UTIL
 
+`timescale 1 ns/1 ps
+
 //SRAM
 `define Sram_Word 256
 `define Sram_Addr 1024
@@ -21,10 +23,6 @@
 //PEARRAY
 `define PE_Array_size 64
 `define PE_Array_size_log $clog2(`PE_Array_size)
-
-//Top
-`define TOP_STATE_BIT 2
-
 
 module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	input  [DATA_WIDTH-1 : 0 ] a,
