@@ -14,7 +14,7 @@ module top (
 	//user
 	input i_set_t,
 	input i_start_cal,
-	output o_busy_w,
+	output reg o_busy,
 	output [`V_E_F_Bit-1:0] o_result,
 	output o_valid,
 	
@@ -33,9 +33,14 @@ module top (
 );
 
 //IO
+reg _set_t, _start_cal;
+reg n_o_busy;
 reg [17:0] _t;
 reg [`PE_Array_size*2-1:0] _s;
 reg [`PE_Array_size_log : 0] _s_valid;
+reg [`Match_bit-1 : 0 ] _match, _mismatch;
+reg [7:0] _minusAlpha, _minusBeta;
+reg _param_valid;
 
 //controll
 localparam IDLE = 2'd0;
@@ -48,8 +53,9 @@ reg start_read_t, n_start_read_t;
 reg start_cal, n_start_cal;
 
 //param
-reg [`V_E_F_Bit-1 : 0] post_match, post_mismatch, post_alpha, post_beta;
-reg [`V_E_F_Bit-1 : 0] n_post_match, n_post_mismatch, n_post_alpha, n_post_beta;
+reg [`Match_bit-1 : 0] post_match, n_post_match;
+reg [`V_E_F_Bit-1 : 0] post_mismatch, post_alpha, post_beta;
+reg [`V_E_F_Bit-1 : 0] n_post_mismatch, n_post_alpha, n_post_beta;
 
 //SramController
 wire sram_busy;
@@ -70,7 +76,56 @@ wire PE_update_s_w, PE_update_t_w;
 wire [1:0] t_PE_to_dp;
 wire [`V_E_F_Bit-1 : 0] v_PE_to_dp, f_PE_to_dp;
 
-assign o_busy_w = sram_busy | PE_busy;
+//control && IO
+always @(*) begin
+	n_state = state;
+	n_start_read_t = 1'd0;
+	n_start_cal = 1'd0;
+	n_o_busy = sram_busy | PE_busy;
+
+	case (state)
+		IDLE : begin
+			if(_set_t) begin
+				n_state = SETT;
+				n_start_read_t = 1'd1;
+				n_o_busy = 1'd1;
+			end else if (_start_cal && (t_size != 0)) begin
+				n_state = CALC;
+				n_start_cal = 1'd1;
+				n_o_busy = 1'd1;
+			end
+		end
+
+		SETT : begin
+			if(~sram_busy)n_state = IDLE;
+		end
+
+		CALC : begin
+			if(o_valid)n_state = RESET;
+			n_o_busy = 1'd1;
+		end
+
+		RESET : begin
+			if(~sram_busy)n_state = IDLE;
+		end
+	endcase
+end
+
+//param
+always @(*) begin
+	if(_param_valid & (state != CALC)) begin
+		n_post_match = _match;
+		n_post_mismatch = {{(`V_E_F_Bit - `Match_bit){1'd1}}, (~_mismatch + 1)};
+		n_post_alpha = {{(`V_E_F_Bit - 8){1'd1}}, (~_minusAlpha + 1)};
+		n_post_beta = {{(`V_E_F_Bit - 8){1'd1}}, (~_minusBeta + 1)};
+
+	end else begin
+		n_post_match = post_alpha;
+		n_post_mismatch = post_mismatch;
+		n_post_alpha = post_alpha;
+		n_post_beta = post_beta;
+	end
+end
 
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
@@ -78,11 +133,53 @@ always @(posedge clk or negedge rst_n) begin
 		state <= IDLE;
 		start_read_t <= 1'd0;
 		start_cal <= 1'd0;
-		
+
+		//IO
+		_set_t <= 1'd0;
+		_start_cal <= 1'd0;
+		o_busy <= 1'd0;
+		_t <= 18'd0;
+		_s <= {(`PE_Array_size*2){1'd0}};
+		_s_valid <= 1'd0;
+		_match <= 0;
+		_mismatch <= 0;
+		_minusAlpha <= 0;
+		_minusBeta <= 0;
+		_param_valid <= 1'd0;
+
+		//param
+		post_match <= 6;
+		post_mismatch <= {`V_E_F_Bit{1'd1}};
+		post_alpha <= {{(`V_E_F_Bit-1){1'd1}}, 1'd0};
+		post_beta <= {`V_E_F_Bit{1'd1}};
+
 	end else begin
-		
+		//control
+		state <= n_state;
+		start_read_t <= n_start_read_t;
+		start_cal <= n_start_cal;
+
+		//IO
+		_set_t <= i_set_t;
+		_start_cal <= i_start_cal;
+		o_busy <= n_o_busy;
+		_t <= i_t;
+		_s <= i_s;
+		_s_valid <= i_s_valid;
+		_match <= i_match;
+		_mismatch <= i_mismatch;
+		_minusAlpha <= i_minusAlpha;
+		_minusBeta <= i_minusBeta;
+		_param_valid <= i_param_valid;
+
+		//param
+		post_match <= n_post_match;
+		post_mismatch <= n_post_mismatch;
+		post_alpha <= n_post_alpha;
+		post_beta <= n_post_beta;
 	end
 end
+
 SramController mem(.clk(clk), .rst_n(rst_n), .i_PE_request(dp_request_sram), .o_request_data(data_sram_to_dp), .i_PE_send(dp_store_sram), 
 	.i_send_data(data_dp_to_sram), .o_T_size(t_size), .i_init(init), .i_start_read_t(start_read_t), .i_t(_t), .o_busy(sram_busy));
 
