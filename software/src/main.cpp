@@ -27,7 +27,7 @@ bool readfile(ifstream& ifs){
 }
 
 inline float table(char a, char b) {
-    return (a == b) ? _match : _mismatch;
+    return (a == b) ? _match : -1 * _mismatch;
 }
 
 template<class T>
