@@ -7,7 +7,7 @@
 `include "src/PEArrayController.v"
 `include "src/util.v"
 
-module top (
+module Top (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
 

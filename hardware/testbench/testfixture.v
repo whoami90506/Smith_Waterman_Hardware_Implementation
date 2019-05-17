@@ -1,0 +1,115 @@
+`timescale 1ns/1ps
+`define CYCLE    20           	        // Modify your clock period here
+`define TERMINATION  50000
+`define ERROR_SUM 10
+
+`include "src/top.v"
+`define SEQ_T "testbench/dat/0"
+
+//param
+`define MATCH 10
+`define MISMATCH 5
+`define ALPHA 46
+`define BETA 23
+
+module test;
+
+//tb
+reg clk;
+reg rst_n;
+integer err, stage;
+reg down;
+
+//mem
+reg [17:0]   t_mem   [0:`Sram_Addr-1];
+reg [`PE_Array_size*2-1:0] s_mem [0:99999];
+
+//top
+reg set_t, start_cal, param_valid;
+reg [17:0] seq_t;
+reg [`PE_Array_size*2-1:0] seq_s;
+reg [`PE_Array_size_log : 0] seq_s_valid;
+
+wire busy, valid, request_s;
+wire [`V_E_F_Bit-1 : 0] result;
+
+Top top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start_cal), .o_busy(busy), .o_result(result), .o_valid(valid), 
+	.i_t(seq_t), .o_request_s(request_s), .i_s(seq_s), .i_s_valid(seq_s_valid), .i_match(`MATCH), .i_mismatch(`MISMATCH), 
+	.i_minusAlpha (`ALPHA), .i_minusBeta(`BETA), .i_param_valid(param_valid));
+
+initial begin
+	//tb
+	clk         = 1'b0;
+	reset       = 1'b1;
+	err         = 0;
+	stage       = 0;  
+	down        = 1'b0;
+
+	//top
+	set_t = 1'd0;
+	start_cal = 1'd0;
+	param_valid = 1'd0;
+	seq_t = 18'd0;
+	seq_s = {(`PE_Array_size*2){1'd0}};
+	seq_s_valid = {(`PE_Array_size_log+1){1'd0}};
+
+	@(negedge clk)reset = 1'b0;
+	#(2* `CYCLE)  reset = 1'b1;
+end
+
+initial begin
+	$fsdbDumpfile("sw.fsdb");
+	$fsdbDumpvars;
+	$fsdbDumpMDA;
+
+	$display("======================================================================");
+	$display("Start simulation !");
+	$display("======================================================================");
+end
+
+always  #(`CYCLE/2) clk = ~clk;
+
+always @(*) begin 
+	if(err >= `ERROR_SUM) begin
+		$display("================================================================================================================");
+		$display("There are more than %d errors in the code!!!", `ERROR_SUM); 
+		$display("================================================================================================================");
+		#`CYCLE $finish;
+	end
+
+end
+
+initial begin
+	#(`TERMINATION * `CYCLE);
+	$display("================================================================================================================");
+	$display("(/`n`)/ ~#  There is something wrong with your code!!"); 
+	$display("Time out!! The simulation didn't finish after %d cycles!!, Please check it!!!", `TERMINATION); 
+	$display("================================================================================================================");
+	#`CYCLE $finish;
+end
+
+initial begin
+	@(posedge down);
+	if(err) begin
+		$display("============================================================================");
+     	$display("\n (T_T) ERROR found!! There are %d errors in total.\n", err);
+        $display("============================================================================");
+	end else begin
+		$display("============================================================================");
+        $display("\n");
+        $display("        ****************************              ");
+        $display("        **                        **        /|__/|");
+        $display("        **  Congratulations !!    **      / O,O  |");
+        $display("        **                        **    /_____   |");
+        $display("        **  Simulation Complete!! **   /^ ^ ^ \\  |");
+        $display("        **                        **  |^ ^ ^ ^ |w|");
+        $display("        *************** ************   \\m___m__|_|");
+        $display("\n");
+        $display("============================================================================");
+	end
+
+	# `CYCLE $finish;
+end
+
+endmodule
+
