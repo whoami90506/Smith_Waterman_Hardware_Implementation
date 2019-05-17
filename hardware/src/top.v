@@ -14,7 +14,7 @@ module top (
 	//user
 	input i_set_t,
 	input i_start_cal,
-	output reg o_busy,
+	output o_busy_w,
 	output [`V_E_F_Bit-1:0] o_result,
 	output o_valid,
 	
@@ -38,13 +38,18 @@ reg [`PE_Array_size*2-1:0] _s;
 reg [`PE_Array_size_log : 0] _s_valid;
 
 //controll
-reg start_read_t;
-reg start_cal;
+localparam IDLE = 2'd0;
+localparam SETT = 2'd1;
+localparam CALC = 2'd2;
+localparam RESET = 2'd3;
+
+reg [1:0] state, n_state;
+reg start_read_t, n_start_read_t;
+reg start_cal, n_start_cal;
 
 //param
 reg [`V_E_F_Bit-1 : 0] post_match, post_mismatch, post_alpha, post_beta;
-
-
+reg [`V_E_F_Bit-1 : 0] n_post_match, n_post_mismatch, n_post_alpha, n_post_beta;
 
 //SramController
 wire sram_busy;
@@ -65,6 +70,19 @@ wire PE_update_s_w, PE_update_t_w;
 wire [1:0] t_PE_to_dp;
 wire [`V_E_F_Bit-1 : 0] v_PE_to_dp, f_PE_to_dp;
 
+assign o_busy_w = sram_busy | PE_busy;
+
+always @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		//control
+		state <= IDLE;
+		start_read_t <= 1'd0;
+		start_cal <= 1'd0;
+		
+	end else begin
+		
+	end
+end
 SramController mem(.clk(clk), .rst_n(rst_n), .i_PE_request(dp_request_sram), .o_request_data(data_sram_to_dp), .i_PE_send(dp_store_sram), 
 	.i_send_data(data_dp_to_sram), .o_T_size(t_size), .i_init(init), .i_start_read_t(start_read_t), .i_t(_t), .o_busy(sram_busy));
 
