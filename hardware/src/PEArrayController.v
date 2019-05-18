@@ -17,7 +17,7 @@ module PEArrayController (
 	//top && controll
 	input i_start,
 	output reg o_busy,
-	output reg [`V_E_F_Bit-1:0] o_result,
+	output [`V_E_F_Bit-1:0] o_result,
 	output reg o_valid,
 	output reg o_init,
 
@@ -38,6 +38,9 @@ module PEArrayController (
 	input i_t_last
 );
 
+//IO
+reg n_o_busy, n_o_valid, n_o_init;
+
 //PE 
 reg [`PE_Array_size-1 : 0] PE_enable, n_PE_enable;
 reg PE_lock, n_PE_lock;
@@ -47,12 +50,21 @@ wire [`V_E_F_Bit-1 :0] PE_v [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v_a [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_f [0 : `PE_Array_size];
 
+assign PE_t[0] = i_t;
+assign PE_v[0] = i_v;
+assign PE_v_a[0] = i_v + i_minusAlpha;
+assign PE_f[0] = i_f;
+assign o_t = PE_t[`PE_Array_size];
+assign o_v = PE_v[`PE_Array_size];
+assign o_f = PE_f[`PE_Array_size];
+
 
 genvar idx;
-	for(idx = 0; idx < `PE_Array_size; idx = idx+1) PE cell(.clk(clk), .rst(rst_n), .enable(PE_enable[`PE_Array_size - idx - 1]), 
-		.lock(PE_lock), .newLineIn(PE_newline[idx]), .newLineOut[idx+1], .s(i_s[(`PE_Array_size - idx)*2-1 : (`PE_Array_size - idx)*2-2]), 
+	for(idx = 0; idx < `PE_Array_size; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[`PE_Array_size - idx - 1]), 
+		.lock(PE_lock), .newLineIn(PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(i_s[(`PE_Array_size - idx)*2-1 : (`PE_Array_size - idx)*2-2]), 
 		.tIn(PE_t[idx]), .tOut(PE_t[idx+1]), .match(i_match), .mismatch(i_mismatch), .minusAlpha(i_minusAlpha), 
-		.minusBeta(i_minusBeta), .vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut);
+		.minusBeta(i_minusBeta), .vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut(PE_v[idx+1]), 
+		.vOut_alpha(PE_v_a[idx+1]), .fOut(PE_f[idx+1]));
 generate
 
 endgenerate

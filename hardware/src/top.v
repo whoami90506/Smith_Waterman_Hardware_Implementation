@@ -23,7 +23,7 @@ module Top (
 
 	output o_request_s,
 	input [`PE_Array_size*2-1:0] i_s,
-	input [`PE_Array_size_log : 0] i_s_valid,
+	input [`PE_Array_size_log-1 : 0] i_s_valid,
 
 	input [`Match_bit-1 : 0] i_match,
 	input [`Match_bit-1 : 0] i_mismatch,
@@ -37,7 +37,7 @@ reg _set_t, _start_cal;
 reg n_o_busy;
 reg [17:0] _t;
 reg [`PE_Array_size*2-1:0] _s;
-reg [`PE_Array_size_log : 0] _s_valid;
+reg [`PE_Array_size_log-1 : 0] _s_valid;
 reg [`Match_bit-1 : 0 ] _match, _mismatch;
 reg [7:0] _minusAlpha, _minusBeta;
 reg _param_valid;
