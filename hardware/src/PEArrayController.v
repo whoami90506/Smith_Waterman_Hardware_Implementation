@@ -23,6 +23,7 @@ module PEArrayController (
 
 	//Data Processor
 	input i_data_valid,
+	input [`PE_Array_size_log : 0] i_init_s_len,
 
 	output reg o_update_s_w,
 	input [`PE_Array_size*2-1:0] i_s,

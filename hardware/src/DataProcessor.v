@@ -18,6 +18,7 @@ module DataProcessor (
 
 	//PEArrayController
 	output reg o_valid,
+	output [`PE_Array_size_log : 0] o_init_s_len,
 	input i_init,
 
 	input i_PE_update_s,
