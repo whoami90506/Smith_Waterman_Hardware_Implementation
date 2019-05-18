@@ -15,7 +15,8 @@ output reg newLineOut;
 
 input [1:0] s, tIn;
 output reg  [1:0] tOut;
-input [`V_E_F_Bit-1 : 0] minusAlpha, minusBeta, match, mismatch;
+input [`V_E_F_Bit-1 : 0] minusAlpha, minusBeta, mismatch;
+input [`Match_bit-1 :0] match;
 
 input [`V_E_F_Bit-1 : 0 ] vIn, vIn_alpha, fIn;
 output reg [`V_E_F_Bit-1 : 0] vOut, vOut_alpha, fOut;

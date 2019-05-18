@@ -108,8 +108,8 @@ always @(*) begin
 		end
 
 		RESET : begin
-			if(~sram_busy)n_state = IDLE;
-			n_o_busy = sram_busy;
+			if(~sram_busy & ~PE_busy )n_state = IDLE;
+			n_o_busy = sram_busy | PE_busy;
 		end
 	endcase
 end
