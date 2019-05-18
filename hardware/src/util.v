@@ -58,8 +58,8 @@ module myMax8 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	input clk,
 	input rst_n,
 	input [DATA_WIDTH*8 -1 : 0] in,
-	output reg [DATA_WIDTH-1 : 0] result
-		
+	output reg [DATA_WIDTH-1 : 0] result,
+	input init
 );
 	wire [DATA_WIDTH-1 : 0] result1, result2, n_result;
 	myMax4 #(.DATA_WIDTH(DATA_WIDTH)) m1(.a(in[DATA_WIDTH-1 : 0]), .b(in[DATA_WIDTH*2-1:DATA_WIDTH]),
@@ -70,7 +70,7 @@ module myMax8 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 
 	always @(posedge clk or negedge rst_n) begin
 		if(~rst_n) result <= {DATA_WIDTH{1'b0}};
-		else result <= n_result;
+		else result <= init ? {DATA_WIDTH{1'b0}} : n_result;
 	end
 endmodule
 
@@ -78,7 +78,8 @@ module myMax64 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
 	input [DATA_WIDTH*64 -1 : 0] in,
-	output [DATA_WIDTH-1 : 0] result
+	output [DATA_WIDTH-1 : 0] result,
+	input init
 );
 
 	wire [DATA_WIDTH*8 -1 : 0] middle;
@@ -87,10 +88,10 @@ module myMax64 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	generate
 		for (idx = 0; idx < 8; idx = idx+1) 
 			myMax8 #(.DATA_WIDTH(DATA_WIDTH)) layer1(.clk(clk), .rst_n(rst_n), 
-				.in(in[DATA_WIDTH*(idx+1)*8-1 : DATA_WIDTH*idx*8]), .result(middle[DATA_WIDTH*(idx+1)-1 : DATA_WIDTH*idx]));
+				.in(in[DATA_WIDTH*(idx+1)*8-1 : DATA_WIDTH*idx*8]), .result(middle[DATA_WIDTH*(idx+1)-1 : DATA_WIDTH*idx]), .init(init));
 	endgenerate
 
-	myMax8 layer2 (.clk(clk), .rst_n (rst_n), .in(middle), .result(result));
+	myMax8 layer2 (.clk(clk), .rst_n (rst_n), .in(middle), .result(result), .init(init));
 
 endmodule
 
