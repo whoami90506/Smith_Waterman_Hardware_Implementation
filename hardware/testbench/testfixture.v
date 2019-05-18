@@ -105,7 +105,19 @@ always @(negedge clk) begin
 		end
 
 		4 : begin //wait busy to low
-			if(~busy) down = 1'b1;
+			if(~busy) stage = 5;
+		end
+
+		5 : begin //set file
+			cnt = $fscanf(fp_s_len, "%d\n", s_len);
+			cnt = $fscanf(fp_param, "%b\n", param);
+			$readmemb($sformatf("%s_s_%d.dat", `DATA, s_num_itr), t_mem);
+			param_valid = 1'd1;
+			stage = 6;
+		end
+
+		6 : begin //start calc
+			down = 1'd1;
 		end
 	endcase
 end

@@ -123,7 +123,7 @@ always @(*) begin
 		n_post_beta = {{(`V_E_F_Bit - 8){1'd1}}, (~_minusBeta + 1)};
 
 	end else begin
-		n_post_match = post_alpha;
+		n_post_match = post_match;
 		n_post_mismatch = post_mismatch;
 		n_post_alpha = post_alpha;
 		n_post_beta = post_beta;
