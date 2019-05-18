@@ -4,13 +4,7 @@
 `define ERROR_SUM 10
 
 `include "src/top.v"
-`define SEQ_T "testbench/dat/0"
-
-//param
-`define MATCH 10
-`define MISMATCH 5
-`define ALPHA 46
-`define BETA 23
+`define DATA "testbench/dat/TA"
 
 module test;
 
@@ -20,9 +14,14 @@ reg rst_n;
 integer err, stage;
 reg down;
 
-//mem
+//data
 reg [17:0]   t_mem   [0:`Sram_Addr-1];
 reg [`PE_Array_size*2-1:0] s_mem [0:99999];
+reg [23:0] param;
+integer s_num_itr, s_len_itr;
+integer s_num, s_len;
+integer fp_s_num, fp_s_len, fp_param;
+
 
 //top
 reg set_t, start_cal, param_valid;
@@ -34,8 +33,8 @@ wire busy, valid, request_s;
 wire [`V_E_F_Bit-1 : 0] result;
 
 Top top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start_cal), .o_busy(busy), .o_result(result), .o_valid(valid), 
-	.i_t(seq_t), .o_request_s(request_s), .i_s(seq_s), .i_s_valid(seq_s_valid), .i_match(`MATCH), .i_mismatch(`MISMATCH), 
-	.i_minusAlpha (`ALPHA), .i_minusBeta(`BETA), .i_param_valid(param_valid));
+	.i_t(seq_t), .o_request_s(request_s), .i_s(seq_s), .i_s_valid(seq_s_valid), .i_match(param[23:20]), .i_mismatch(param[19:16]), 
+	.i_minusAlpha (param[15:8]), .i_minusBeta(param[7:0]), .i_param_valid(param_valid));
 
 initial begin
 	//tb
@@ -55,6 +54,7 @@ initial begin
 
 	@(negedge clk)reset = 1'b0;
 	#(2* `CYCLE)  reset = 1'b1;
+	#(`CYCLE / 2) down = 1'b1;
 end
 
 initial begin
