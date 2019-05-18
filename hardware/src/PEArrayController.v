@@ -41,6 +41,11 @@ module PEArrayController (
 //IO
 reg n_o_busy, n_o_valid, n_o_init;
 
+//control
+localparam IDLE = 'd0;
+reg [:0] state, n_state;
+reg newline, n_newline;
+
 //PE 
 reg [`PE_Array_size-1 : 0] PE_enable, n_PE_enable;
 reg PE_lock, n_PE_lock;
@@ -54,9 +59,18 @@ assign PE_t[0] = i_t;
 assign PE_v[0] = i_v;
 assign PE_v_a[0] = i_v + i_minusAlpha;
 assign PE_f[0] = i_f;
+assign PE_newline[0] = newline;
 assign o_t = PE_t[`PE_Array_size];
 assign o_v = PE_v[`PE_Array_size];
 assign o_f = PE_f[`PE_Array_size];
+
+always @(posedge clk or negedge rst_n) begin
+	if (~rst_n) begin
+		
+	end else begin
+		
+	end
+end
 
 
 genvar idx;
