@@ -36,6 +36,7 @@ module DataProcessor (
 	output reg o_t_last,
 
 	//top
+	input i_start_calc,
 	output reg o_request_s,
 	input [`PE_Array_size*2-1:0] i_s,
 	input [`PE_Array_size_log : 0] i_s_valid

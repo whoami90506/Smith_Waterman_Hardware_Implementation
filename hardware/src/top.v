@@ -191,7 +191,7 @@ DataProcessor dp(.clk(clk), .rst_n(rst_n), .o_sram_request(dp_request_sram), .i_
 	.o_send_data(data_dp_to_sram), .i_T_size(t_size), .o_valid(dp_data_valid), .i_init(init), .i_PE_update_s(PE_update_s_w), .o_s(seq_s), 
 	.o_s_last(seq_s_last), .i_PE_update_t(PE_update_t_w), .o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_f(f_dp_to_PE), .i_t(t_PE_to_dp), 
 	.i_v(v_PE_to_dp), .i_f(f_PE_to_dp), .o_t_last(seq_t_last), .o_request_s(o_request_s), .i_s(_s), .i_s_valid(_s_valid), .o_init_s_len(init_s_len), 
-	.i_t_valid(t_valid));
+	.i_t_valid(t_valid), .i_start_calc(start_cal));
 
 PEArrayController PE(.clk(clk), .rst_n(rst_n), .i_match(post_match), .i_mismatch(post_mismatch), .i_minusAlpha(post_alpha), 
 	.i_minusBeta (post_beta), .i_start(start_cal), .o_busy(PE_busy), .o_result(o_result), .o_valid(o_valid), .i_data_valid(dp_data_valid), 
