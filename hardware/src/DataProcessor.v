@@ -29,6 +29,7 @@ module DataProcessor (
 	output reg [1:0] o_t,
 	output reg [`V_E_F_Bit-1:0] o_v,
 	output reg [`V_E_F_Bit-1:0] o_f,
+	input i_t_valid,
 	input [1:0] i_t,
 	input [`V_E_F_Bit-1 : 0] i_v,
 	input [`V_E_F_Bit-1 : 0] i_f,

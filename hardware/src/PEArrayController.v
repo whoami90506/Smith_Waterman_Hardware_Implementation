@@ -33,6 +33,7 @@ module PEArrayController (
 	output [1:0] o_t,
 	output [`V_E_F_Bit-1:0] o_v,
 	output [`V_E_F_Bit-1:0] o_f,
+	output reg o_t_valid,
 	input [1:0] i_t,
 	input [`V_E_F_Bit-1 : 0] i_v,
 	input [`V_E_F_Bit-1 : 0] i_f,
@@ -40,14 +41,15 @@ module PEArrayController (
 );
 
 //IO
-reg n_o_busy, n_o_valid, n_o_init;
+reg n_o_busy, n_o_valid, n_o_init, n_o_t_valid;
 
 //control
-localparam IDLE = 'd0;
-reg [:0] state, n_state;
-reg newline, n_newline;
+localparam IDLE = 3'd0;
+reg [3:0] state, n_state;
+reg [`PE_Array_size_log-1 : 0] s_counter, n_s_counter;
 
 //PE 
+reg newline, n_newline;
 reg [`PE_Array_size-1 : 0] PE_enable, n_PE_enable;
 reg PE_lock, n_PE_lock;
 wire PE_newline [0 : `PE_Array_size];
