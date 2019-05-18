@@ -81,10 +81,11 @@ always @(*) begin
 	n_state = state;
 	n_start_read_t = 1'd0;
 	n_start_cal = 1'd0;
-	n_o_busy = sram_busy | PE_busy;
 
 	case (state)
 		IDLE : begin
+			n_o_busy = 1'd0;
+
 			if(_set_t) begin
 				n_state = SETT;
 				n_start_read_t = 1'd1;
@@ -97,7 +98,8 @@ always @(*) begin
 		end
 
 		SETT : begin
-			if(~sram_busy)n_state = IDLE;
+			if(~sram_busy & ~start_read_t)n_state = IDLE;
+			n_o_busy = sram_busy | start_read_t;
 		end
 
 		CALC : begin
@@ -107,6 +109,7 @@ always @(*) begin
 
 		RESET : begin
 			if(~sram_busy)n_state = IDLE;
+			n_o_busy = sram_busy;
 		end
 	endcase
 end

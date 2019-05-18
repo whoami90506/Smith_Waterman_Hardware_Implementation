@@ -9,7 +9,7 @@ module PEArrayController (
 	input rst_n,  // Asynchronous reset active low
 
 	//parameter
-	input [`V_E_F_Bit-1:0] i_match,
+	input [`Match_bit-1:0] i_match,
 	input [`V_E_F_Bit-1:0] i_mismatch,
 	input [`V_E_F_Bit-1:0] i_minusAlpha,
 	input [`V_E_F_Bit-1:0] i_minusBeta,
@@ -37,5 +37,7 @@ module PEArrayController (
 	input [`V_E_F_Bit-1 : 0] i_f,
 	input i_t_last
 );
+
+always @(*) o_busy = 1'd0;
 endmodule // PEArrayController
 `endif

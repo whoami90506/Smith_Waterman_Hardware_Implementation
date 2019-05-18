@@ -18,9 +18,9 @@ reg down;
 reg [17:0]   t_mem   [0:`Sram_Addr-1];
 reg [`PE_Array_size*2-1:0] s_mem [0:99999];
 reg [23:0] param;
-integer s_num_itr, s_len_itr;
+integer s_num_itr, s_len_itr, t_itr;
 integer s_num, s_len;
-integer fp_s_num, fp_s_len, fp_param;
+integer fp_s_len, fp_param, cnt;
 
 
 //top
@@ -39,10 +39,15 @@ Top top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start_cal), .o_b
 initial begin
 	//tb
 	clk         = 1'b0;
-	reset       = 1'b1;
+	rst_n       = 1'b1;
 	err         = 0;
 	stage       = 0;  
 	down        = 1'b0;
+
+	//data
+	s_num_itr = 0;
+	s_len_itr = 0;
+	t_itr = 0;
 
 	//top
 	set_t = 1'd0;
@@ -52,19 +57,57 @@ initial begin
 	seq_s = {(`PE_Array_size*2){1'd0}};
 	seq_s_valid = {(`PE_Array_size_log+1){1'd0}};
 
-	@(negedge clk)reset = 1'b0;
-	#(2* `CYCLE)  reset = 1'b1;
-	#(`CYCLE / 2) down = 1'b1;
+	@(negedge clk)rst_n = 1'b0;
+	#(2* `CYCLE)  rst_n = 1'b1;
+
+	//stage = 1
+	#(0.01* `CYCLE);
+	stage = 2;
+	set_t = 1'd1;
 end
 
 initial begin
 	$fsdbDumpfile("sw.fsdb");
 	$fsdbDumpvars;
 	$fsdbDumpMDA;
+	
+	fp_s_len = $fopen($sformatf("%s_lenS.dat", `DATA), "r");
+	fp_param = $fopen($sformatf("%s_param.dat", `DATA), "r");
+	cnt = $fscanf(fp_s_len, "%d\n", s_num);
+	$readmemb($sformatf("%s_t.dat", `DATA), t_mem);
 
 	$display("======================================================================");
 	$display("Start simulation !");
 	$display("======================================================================");
+end
+
+always @(negedge clk) begin
+	set_t = 1'd0;
+	start_cal = 1'd0;
+	param_valid = 1'd0;
+	seq_t = 18'd0;
+	seq_s = {(`PE_Array_size*2){1'd0}};
+	seq_s_valid = {(`PE_Array_size_log+1){1'd0}};
+
+	case(stage)
+
+		2 : begin //wait high busy
+			seq_t = t_mem[0];
+			t_itr = 1;
+			if(seq_t[16:14]) stage = 4;
+			else stage = 3;
+		end
+
+		3 : begin // send t
+			seq_t = t_mem[t_itr];
+			t_itr = t_itr +1;
+			if(seq_t[16:14]) stage = 4;
+		end
+
+		4 : begin //wait busy to low
+			if(~busy) down = 1'b1;
+		end
+	endcase
 end
 
 always  #(`CYCLE/2) clk = ~clk;

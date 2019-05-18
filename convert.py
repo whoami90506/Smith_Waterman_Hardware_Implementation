@@ -70,21 +70,21 @@ with open(args.s, 'r') as f :
 with open(args.o + '_param.dat', 'w') as f :
 	for i in range(len(match)) :
 		f.write(toBinary(match[i], 4))
-		f.write('_')
+		#f.write('_')
 		f.write(toBinary(mismatch[i], 4))
-		f.write('_')
+		#f.write('_')
 		f.write(toBinary(alpha[i], 8))
-		f.write('_')
+		#f.write('_')
 		f.write(toBinary(beta[i], 8))
 
-		f.write(' //')
-		f.write(str(match[i]))
-		f.write(' ')
-		f.write(str(mismatch[i]))
-		f.write(' ')
-		f.write(str(alpha[i]))
-		f.write(' ')
-		f.write(str(beta[i]))
+		# f.write(' //')
+		# f.write(str(match[i]))
+		# f.write(' ')
+		# f.write(str(mismatch[i]))
+		# f.write(' ')
+		# f.write(str(alpha[i]))
+		# f.write(' ')
+		# f.write(str(beta[i]))
 		f.write('\n')
 
 #sequence S
@@ -111,11 +111,9 @@ for numS in range(len(seqS)) :
 
 # length os S
 with open(args.o + '_lenS.dat', 'w') as f :
+	f.write(str(len(seqS)) + '\n')
+	
 	for i in range(len(seqS)) :
-		f.write(toBinary(len(seqS[i]), 32))
-		f.write(' // ' + str(len(seqS[i])) + '\n')
-
-# number of s
-with open(args.o + '_numS.dat', 'w') as f :
-	f.write(toBinary(len(seqS), 32))
-	f.write(' // ' + str(len(seqS)) + '\n')
+		f.write(str(len(seqS[i])))
+		# f.write(' // ' + str(len(seqS[i])))
+		f.write('\n')
