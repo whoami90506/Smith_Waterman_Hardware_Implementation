@@ -19,7 +19,6 @@ module PEArrayController (
 	output reg o_busy,
 	output [`V_E_F_Bit-1:0] o_result,
 	output reg o_valid,
-	output reg o_init,
 
 	//Data Processor
 	input i_data_valid,
@@ -29,9 +28,9 @@ module PEArrayController (
 	input i_s_last,
 
 	output reg  o_update_t_w,
-	output [1:0] o_t,
-	output [`V_E_F_Bit-1:0] o_v,
-	output [`V_E_F_Bit-1:0] o_f,
+	output reg [1:0] o_t,
+	output reg [`V_E_F_Bit-1:0] o_v,
+	output reg [`V_E_F_Bit-1:0] o_f,
 	output reg o_t_valid,
 	input [1:0] i_t,
 	input [`V_E_F_Bit-1 : 0] i_v,
@@ -43,7 +42,9 @@ genvar idx;
 integer i;
 
 //IO
-reg n_o_busy, n_o_valid, n_o_init, n_o_t_valid;
+reg n_o_busy, n_o_valid, n_o_t_valid;
+reg [1:0] n_o_t;
+reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
 
 //control
 localparam IDLE = 3'd0;
@@ -53,12 +54,14 @@ reg max_init, n_max_init;
 
 //PE 
 reg newline, n_newline;
-reg [`PE_Array_size-1 : 0] PE_enable, n_PE_enable;
 reg PE_lock, n_PE_lock;
-wire PE_newline [0 : `PE_Array_size];
 
+reg PE_enable [0 : `PE_Array_size-1];
+reg n_PE_enable [0 : `PE_Array_size-1];
 reg [1:0] PE_s [0: `PE_Array_size-1];
 reg [1:0] n_PE_s [0: `PE_Array_size-1];
+
+wire PE_newline [0 : `PE_Array_size];
 wire [1:0] PE_t [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v_a [0 : `PE_Array_size];
@@ -73,9 +76,6 @@ assign PE_v[0] = i_v;
 assign PE_v_a[0] = i_v + i_minusAlpha;
 assign PE_f[0] = i_f;
 assign PE_newline[0] = newline;
-assign o_t = PE_t[`PE_Array_size];
-assign o_v = PE_v[`PE_Array_size];
-assign o_f = PE_f[`PE_Array_size];
 
 generate
 	for(idx = 0; idx < `PE_Array_size; idx = idx+1)
@@ -91,7 +91,7 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 generate
-	for(idx = 0; idx < `PE_Array_size; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[`PE_Array_size - idx - 1]), 
+	for(idx = 0; idx < `PE_Array_size; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), 
 		.lock(PE_lock), .newLineIn(PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(PE_s[idx]), 
 		.tIn(PE_t[idx]), .tOut(PE_t[idx+1]), .match(i_match), .mismatch(i_mismatch), .minusAlpha(i_minusAlpha), 
 		.minusBeta(i_minusBeta), .vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut(PE_v[idx+1]), 
