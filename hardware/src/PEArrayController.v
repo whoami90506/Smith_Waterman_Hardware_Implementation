@@ -67,12 +67,12 @@ reg newline, n_newline, newline_buf;
 reg PE_lock, n_PE_lock;
 reg [`PE_Array_size_log-1 : 0] s_using, n_s_using;
 
-reg PE_enable [0 : `PE_Array_size-1];
-reg n_PE_enable [0 : `PE_Array_size-1];
+reg [ `PE_Array_size-1 : 0] PE_enable;
+reg [ `PE_Array_size-1 : 0] n_PE_enable;
 reg [1:0] PE_s [0: `PE_Array_size-1];
 reg [1:0] n_PE_s [0: `PE_Array_size-1];
 
-wire PE_newline [0 : `PE_Array_size];
+wire [ `PE_Array_size : 0] PE_newline;
 wire [1:0] PE_t [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v_a [0 : `PE_Array_size];
@@ -127,6 +127,10 @@ always @(*) begin
 		READ_T : if(i_data_valid & i_t_last) n_state = READ_ST;
 
 		FINAL_T : if(i_data_valid & i_t_last) n_state = WAIT;
+
+		WAIT : begin
+			
+		end
 	endcase
 end
 
@@ -184,6 +188,13 @@ always @(*) begin
 		end //READ_T
 
 		FINAL_T : begin
+			o_update_t_w = 1'd1;
+			o_update_s_w = 1'd0;
+
+			if(i_data_valid) begin
+				n_t_valid_buf = 1'd1;
+				if(i_t_last) o_update_t_w = 1'b0;
+			end
 		end //FINAL_T
 	endcase
 end
@@ -202,7 +213,7 @@ always @(*) begin
 		IDLE : begin
 			n_newline = 1'b1;
 			n_PE_lock = 1'b1;
-		end
+		end //IDLE
 
 		READ_ST : begin
 			if(i_data_valid) begin
@@ -222,6 +233,8 @@ always @(*) begin
 		READ_T : begin
 			if(i_data_valid) n_newline = i_t_last;
 		end //READ_T
+
+		//FINAL_T remain the same
 	endcase
 end
 
