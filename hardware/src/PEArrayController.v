@@ -92,7 +92,11 @@ always @(*) begin
 	n_first_itr = first_itr;
 
 	case (state)
-		IDLE : if(i_start)n_state = READ_ST;
+		IDLE : begin
+			if(i_start)n_state = READ_ST;
+			n_counter = 0;
+			n_first_itr = 1'b1;
+		end
 
 		READ_ST : begin
 			if(i_data_valid) begin
@@ -122,6 +126,9 @@ always @(*) begin
 	n_o_t_valid = 1'b0;
 	o_update_s_w = 1'b0;
 	o_update_t_w = 1'b0;
+	n_o_t = o_t;
+	n_o_v = o_v;
+	n_o_f = o_f;
 
 	case (state)
 		IDLE : begin
@@ -136,6 +143,30 @@ always @(*) begin
 			n_o_t = PE_t[{1'b0, s_using} +1];
 			n_o_v = PE_v[{1'b0, s_using} +1];
 			n_o_f = PE_f[{1'b0, s_using} +1];
+			o_update_s_w = 1'b1;
+			o_update_t_w = 1'b1;
+
+			if(i_data_valid) begin
+				n_o_t_valid = ~first_itr;
+				case ({i_s_last, i_t_last})
+					2'b11 : begin //WAIT
+						o_update_t_w = 1'd0;
+						o_update_s_w = 1'd0;
+					end 
+					2'b10 : begin // final T
+						o_update_t_w = 1'd1;
+						o_update_s_w = 1'd0;
+					end
+					2'b00 : begin
+						if (counter == s_using) begin //READ_T
+							o_update_t_w = 1'd1;
+							o_update_s_w = 1'd0;
+						end
+					end
+					
+					//2'b01 remain the same
+				endcase
+			end
 			
 		end
 	endcase
@@ -153,6 +184,14 @@ always @(*) begin
 
 	case (state)
 		IDLE : n_newline = 1'b1;
+
+		READ_ST : begin
+			PE_lock_w = ~i_data_valid;
+
+			if(i_data_valid) begin
+				n_PE_s
+			end
+		end
 	endcase
 end
 
