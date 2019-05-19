@@ -44,8 +44,8 @@ integer i;
 //IO
 reg t_valid_buf;
 reg n_o_busy, n_o_valid, n_t_valid_buf;
-wire [1:0] n_o_t;
-wire [`V_E_F_Bit-1:0] n_o_v, n_o_f;
+wire [1:0] n_t_buf;
+wire [`V_E_F_Bit-1:0] n_v_buf, n_f_buf;
 reg [1:0] t_buf;
 reg [`V_E_F_Bit-1:0] v_buf, f_buf;
 
@@ -56,7 +56,6 @@ localparam READ_T  = 3'd2;
 localparam FINAL_T = 3'd3;
 localparam WAIT    = 3'd4;
 localparam RESULT  = 3'd5;
-localparam END     = 3'd6;
 
 reg [3:0] state, n_state;
 reg [`PE_Array_size_log-1 : 0] counter, n_counter;
@@ -88,9 +87,9 @@ assign PE_v_a[0] = v_buf + i_minusAlpha;
 assign PE_f[0] = f_buf;
 assign PE_newline[0] = newline_buf;
 
-assign n_o_t = PE_t[{1'b0, s_using} +1];
-assign n_o_v = PE_v[{1'b0, s_using} +1];
-assign n_o_f = PE_f[{1'b0, s_using} +1];
+assign n_t_buf = PE_t[{1'b0, s_using} +1];
+assign n_v_buf = PE_v[{1'b0, s_using} +1];
+assign n_f_buf = PE_f[{1'b0, s_using} +1];
 
 //control
 always @(*) begin
@@ -128,9 +127,9 @@ always @(*) begin
 
 		FINAL_T : if(i_data_valid & i_t_last) n_state = WAIT;
 
-		WAIT : begin
-			
-		end
+		WAIT : if(~PE_enable) n_state = RESULT;
+
+		RESULT : n_state = IDLE;
 	endcase
 end
 
@@ -188,14 +187,13 @@ always @(*) begin
 		end //READ_T
 
 		FINAL_T : begin
-			o_update_t_w = 1'd1;
+			o_update_t_w = ~(i_data_valid & i_t_last);
 			o_update_s_w = 1'd0;
-
-			if(i_data_valid) begin
-				n_t_valid_buf = 1'd1;
-				if(i_t_last) o_update_t_w = 1'b0;
-			end
 		end //FINAL_T
+
+		//Wait is default
+
+		RESULT : n_o_valid = 1'd1;
 	endcase
 end
 
@@ -220,13 +218,7 @@ always @(*) begin
 				n_PE_s[counter] = i_s;
 				n_PE_enable[counter] = 1'd1;
 				n_newline = i_t_last;
-
-				if(i_s_last) begin
-					n_s_using = counter;
-					for(i = 0; i < `PE_Array_size; i = i+1) begin
-						if(i > counter) n_PE_enable[i] = 1'd0;
-					end
-				end
+				if(i_s_last) n_s_using = counter;
 			end
 		end //READ_ST
 
@@ -234,7 +226,32 @@ always @(*) begin
 			if(i_data_valid) n_newline = i_t_last;
 		end //READ_T
 
-		//FINAL_T remain the same
+		FINAL_T : begin
+			if(i_data_valid) begin
+				if(s_using < `PE_Array_size -1) n_PE_enable[s_using +1] = 1'd0;
+
+				for(i = 0; i < `PE_Array_size; i = i+1) begin
+					if( (i > s_using) & (~PE_enable[i-1]) )n_PE_enable[i] = 1'd0;
+				end
+			end
+		end //FINAL_T
+
+		WAIT : begin
+			n_PE_lock = 1'd0;
+
+			n_PE_enable[0] = 1'd0;
+			n_PE_enable[s_using+1] = 1'd0;
+			for(i = 1; i < `PE_Array_size; i = i+1) begin
+				if(~PE_enable[i-1]) n_PE_enable[i] = 1'd0;
+			end
+		end //WAIT
+
+		RESULT : begin
+			n_newline = 1'd1;
+			n_PE_lock = 1'd1;
+			n_s_using = `PE_Array_size -1;
+			for(i = 0; i < `PE_Array_size; i = i+1) n_PE_enable[i] = 1'd0;
+		end // RESULT
 	endcase
 end
 
@@ -268,7 +285,33 @@ always @(posedge clk or negedge rst_n) begin
 			PE_s[i] <= 2'd0;
 		end
 	end else begin
-		
+		//control
+		state <= n_state;
+		counter <= n_counter;
+		first_itr <= n_first_itr;
+
+		//IO
+		o_busy <= n_o_busy;
+		o_valid <= n_o_valid;
+		o_t <= t_buf;
+		o_v <= v_buf;
+		o_f <= f_buf;
+		o_t_valid <= t_valid_buf;
+		t_buf <= n_t_buf;
+		v_buf <= n_v_buf;
+		f_buf <= n_f_buf;
+		t_valid_buf <= n_t_valid_buf;
+
+		//PE
+		newline <= n_newline;
+		newline_buf <= newline;
+		s_using <= n_s_using;
+		PE_lock <= n_PE_lock;
+
+		for(i = 0; i < `PE_Array_size; i = i+1) begin
+			PE_enable[i] <= n_PE_enable[i];
+			PE_s[i] <= n_PE_s[i];
+		end
 	end
 end
 
