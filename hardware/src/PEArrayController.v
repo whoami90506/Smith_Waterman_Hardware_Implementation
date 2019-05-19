@@ -43,7 +43,6 @@ integer i;
 
 //IO
 reg n_o_busy, n_o_valid, n_o_t_valid;
-reg update_s_r, update_t_r;
 reg [1:0] n_o_t;
 reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
 
@@ -52,12 +51,12 @@ localparam IDLE    = 3'd0;
 localparam READ_ST = 3'd1;
 localparam READ_T  = 3'd2;
 localparam FINAL_T = 3'd3;
-localparam RESULT  = 3'd4;
-localparam END     = 3'd5;
+localparam WAIT    = 3'd4;
+localparam RESULT  = 3'd5;
+localparam END     = 3'd6;
 
 reg [3:0] state, n_state;
-reg [`PE_Array_size_log-1 : 0] s_counter, n_s_counter;
-reg max_init, n_max_init;
+reg [`PE_Array_size_log-1 : 0] counter, n_counter;
 reg first_itr, n_first_itr;
 
 //PE 
@@ -89,12 +88,30 @@ assign PE_newline[0] = newline;
 //control
 always @(*) begin
 	n_state = state;
-	n_s_counter = 0;
-	n_max_init = 1'd0;
+	n_counter = counter;
 	n_first_itr = first_itr;
 
 	case (state)
 		IDLE : if(i_start)n_state = READ_ST;
+
+		READ_ST : begin
+			if(i_data_valid) begin
+				if(i_s_last | i_t_last | (counter == s_using) ) begin
+					n_counter = 0;
+					n_first_itr = 1'b0;
+				end else n_counter = counter +1;
+
+				case ({i_s_last, i_t_last})
+					2'b11 : n_state = WAIT;
+					2'b10 : n_state = FINAL_T;
+					2'b01 : n_state = READ_ST;
+					2'b00 : begin
+						if (counter == s_using) n_state = READ_T;
+					end
+					
+				endcase
+			end
+		end
 	endcase
 end
 
@@ -103,16 +120,23 @@ always @(*) begin
 	n_o_busy = 1'b0;
 	n_o_valid = 1'b0;
 	n_o_t_valid = 1'b0;
-	n_o_t = o_t;
-	n_o_v = o_v;
-	n_o_f = o_f;
-	o_update_s_w = update_s_r;
-	o_update_t_w = update_t_r;
+	o_update_s_w = 1'b0;
+	o_update_t_w = 1'b0;
 
 	case (state)
 		IDLE : begin
+			if(i_start)n_o_busy = 1'b1;
+
 			o_update_s_w = 1'b1;
 			o_update_t_w = 1'b1;
+		end
+
+		READ_ST : begin
+			n_o_busy = 1'd1;
+			n_o_t = PE_t[{1'b0, s_using} +1];
+			n_o_v = PE_v[{1'b0, s_using} +1];
+			n_o_f = PE_f[{1'b0, s_using} +1];
+			
 		end
 	endcase
 end
@@ -122,19 +146,21 @@ always @(*) begin
 	n_newline = newline;
 	PE_lock_w = 1'd0;
 	n_s_using = s_using;
-	
 	for(i = 0; i < `PE_Array_size; i = i+1) begin
 		n_PE_enable[i] = PE_enable[i];
 		n_PE_s[i] = PE_s[i];
 	end
+
+	case (state)
+		IDLE : n_newline = 1'b1;
+	endcase
 end
 
 always @(posedge clk or negedge rst_n) begin
 	if (~rst_n) begin
 		//control
 		state <= IDLE;
-		s_counter <= 0;
-		max_init <= 1'd0;
+		counter <= 0;
 		first_itr <= 1'd1;
 
 		//IO
@@ -144,12 +170,10 @@ always @(posedge clk or negedge rst_n) begin
 		o_v <= 0;
 		o_f <= 0;
 		o_t_valid <= 1'd0;
-		update_s_r <= 1'd0;
-		update_t_r <= 1'd0;
 
 		//PE
 		newline <= 1'd0;
-		s_using <= `PE_Array_size;
+		s_using <= `PE_Array_size -1;
 
 		for(i = 0; i < `PE_Array_size; i = i+1) begin
 			PE_enable[i] = 1'b1;
@@ -168,7 +192,7 @@ generate
 		.vOut_alpha(PE_v_a[idx+1]), .fOut(PE_f[idx+1]));
 endgenerate
 
-myMax64 maxTree(.clk(clk), .rst_n(rst_n), .in(PE_v_1D), .result(o_result), .init(max_init));
+myMax64 maxTree(.clk(clk), .rst_n(rst_n), .in(PE_v_1D), .result(o_result), .init(o_valid));
 
 generate
 	for(idx = 0; idx < `PE_Array_size; idx = idx+1)
