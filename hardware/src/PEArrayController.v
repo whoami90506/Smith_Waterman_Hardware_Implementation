@@ -215,8 +215,8 @@ always @(posedge clk or negedge rst_n) begin
 		s_using <= `PE_Array_size -1;
 
 		for(i = 0; i < `PE_Array_size; i = i+1) begin
-			PE_enable[i] = 1'b1;
-			PE_s[i] = 2'd0;
+			PE_enable[i] <= 1'b0;
+			PE_s[i] <= 2'd0;
 		end
 	end else begin
 		
