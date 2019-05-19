@@ -42,9 +42,12 @@ genvar idx;
 integer i;
 
 //IO
-reg n_o_busy, n_o_valid, n_o_t_valid;
-reg [1:0] n_o_t;
-reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
+reg t_valid_buf;
+reg n_o_busy, n_o_valid, n_t_valid_buf;
+wire [1:0] n_t_buf;
+wire [`V_E_F_Bit-1:0] n_v_buf, n_f_buf;
+reg [1:0] t_buf;
+reg [`V_E_F_Bit-1:0] v_buf, f_buf;
 
 //control
 localparam IDLE    = 3'd0;
@@ -53,23 +56,22 @@ localparam READ_T  = 3'd2;
 localparam FINAL_T = 3'd3;
 localparam WAIT    = 3'd4;
 localparam RESULT  = 3'd5;
-localparam END     = 3'd6;
 
 reg [3:0] state, n_state;
 reg [`PE_Array_size_log-1 : 0] counter, n_counter;
 reg first_itr, n_first_itr;
 
 //PE 
-reg newline, n_newline;
-reg PE_lock_w;
+reg newline, n_newline, newline_buf;
+reg PE_lock, n_PE_lock;
 reg [`PE_Array_size_log-1 : 0] s_using, n_s_using;
 
-reg PE_enable [0 : `PE_Array_size-1];
-reg n_PE_enable [0 : `PE_Array_size-1];
+reg [ `PE_Array_size-1 : 0] PE_enable;
+reg [ `PE_Array_size-1 : 0] n_PE_enable;
 reg [1:0] PE_s [0: `PE_Array_size-1];
 reg [1:0] n_PE_s [0: `PE_Array_size-1];
 
-wire PE_newline [0 : `PE_Array_size];
+wire [ `PE_Array_size : 0] PE_newline;
 wire [1:0] PE_t [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v [0 : `PE_Array_size];
 wire [`V_E_F_Bit-1 :0] PE_v_a [0 : `PE_Array_size];
@@ -79,11 +81,15 @@ wire [`V_E_F_Bit-1 :0] PE_f [0 : `PE_Array_size];
 wire [`V_E_F_Bit * `PE_Array_size -1 : 0] PE_v_1D;
 
 //assignment
-assign PE_t[0] = i_t;
-assign PE_v[0] = i_v;
-assign PE_v_a[0] = i_v + i_minusAlpha;
-assign PE_f[0] = i_f;
-assign PE_newline[0] = newline;
+assign PE_t[0] = t_buf;
+assign PE_v[0] = v_buf;
+assign PE_v_a[0] = v_buf + i_minusAlpha;
+assign PE_f[0] = f_buf;
+assign PE_newline[0] = newline_buf;
+
+assign n_t_buf = PE_t[{1'b0, s_using} +1];
+assign n_v_buf = PE_v[{1'b0, s_using} +1];
+assign n_f_buf = PE_f[{1'b0, s_using} +1];
 
 //control
 always @(*) begin
@@ -96,7 +102,7 @@ always @(*) begin
 			if(i_start)n_state = READ_ST;
 			n_counter = 0;
 			n_first_itr = 1'b1;
-		end
+		end //IDLE
 
 		READ_ST : begin
 			if(i_data_valid) begin
@@ -115,39 +121,40 @@ always @(*) begin
 					
 				endcase
 			end
-		end
+		end //READ_ST
+
+		READ_T : if(i_data_valid & i_t_last) n_state = READ_ST;
+
+		FINAL_T : if(i_data_valid & i_t_last) n_state = WAIT;
+
+		WAIT : if(~PE_enable) n_state = RESULT;
+
+		RESULT : n_state = IDLE;
 	endcase
 end
 
 //IO
 always @(*) begin
-	n_o_busy = 1'b0;
+	n_o_busy = 1'b1;
 	n_o_valid = 1'b0;
-	n_o_t_valid = 1'b0;
+	n_t_valid_buf = 1'b0;
 	o_update_s_w = 1'b0;
 	o_update_t_w = 1'b0;
-	n_o_t = o_t;
-	n_o_v = o_v;
-	n_o_f = o_f;
+	
 
 	case (state)
 		IDLE : begin
-			if(i_start)n_o_busy = 1'b1;
-
+			n_o_busy = i_start;
 			o_update_s_w = 1'b1;
 			o_update_t_w = 1'b1;
-		end
+		end//IDLE
 
 		READ_ST : begin
-			n_o_busy = 1'd1;
-			n_o_t = PE_t[{1'b0, s_using} +1];
-			n_o_v = PE_v[{1'b0, s_using} +1];
-			n_o_f = PE_f[{1'b0, s_using} +1];
 			o_update_s_w = 1'b1;
 			o_update_t_w = 1'b1;
 
 			if(i_data_valid) begin
-				n_o_t_valid = ~first_itr;
+				n_t_valid_buf = ~first_itr;
 				case ({i_s_last, i_t_last})
 					2'b11 : begin //WAIT
 						o_update_t_w = 1'd0;
@@ -166,16 +173,34 @@ always @(*) begin
 					
 					//2'b01 remain the same
 				endcase
+			end		
+		end//READ_ST
+
+		READ_T : begin
+			o_update_t_w = 1'd1;
+			o_update_s_w = 1'd0;
+
+			if(i_data_valid) begin
+				n_t_valid_buf = 1'd1;
+				if(i_t_last) o_update_s_w = 1'b1;
 			end
-			
-		end
+		end //READ_T
+
+		FINAL_T : begin
+			o_update_t_w = ~(i_data_valid & i_t_last);
+			o_update_s_w = 1'd0;
+		end //FINAL_T
+
+		//Wait is default
+
+		RESULT : n_o_valid = 1'd1;
 	endcase
 end
 
 //PE
 always @(*) begin
 	n_newline = newline;
-	PE_lock_w = 1'd0;
+	n_PE_lock = ~i_data_valid;
 	n_s_using = s_using;
 	for(i = 0; i < `PE_Array_size; i = i+1) begin
 		n_PE_enable[i] = PE_enable[i];
@@ -183,15 +208,50 @@ always @(*) begin
 	end
 
 	case (state)
-		IDLE : n_newline = 1'b1;
+		IDLE : begin
+			n_newline = 1'b1;
+			n_PE_lock = 1'b1;
+		end //IDLE
 
 		READ_ST : begin
-			PE_lock_w = ~i_data_valid;
-
 			if(i_data_valid) begin
-				n_PE_s
+				n_PE_s[counter] = i_s;
+				n_PE_enable[counter] = 1'd1;
+				n_newline = i_t_last;
+				if(i_s_last) n_s_using = counter;
 			end
-		end
+		end //READ_ST
+
+		READ_T : begin
+			if(i_data_valid) n_newline = i_t_last;
+		end //READ_T
+
+		FINAL_T : begin
+			if(i_data_valid) begin
+				if(s_using < `PE_Array_size -1) n_PE_enable[s_using +1] = 1'd0;
+
+				for(i = 0; i < `PE_Array_size; i = i+1) begin
+					if( (i > s_using) & (~PE_enable[i-1]) )n_PE_enable[i] = 1'd0;
+				end
+			end
+		end //FINAL_T
+
+		WAIT : begin
+			n_PE_lock = 1'd0;
+
+			n_PE_enable[0] = 1'd0;
+			n_PE_enable[s_using+1] = 1'd0;
+			for(i = 1; i < `PE_Array_size; i = i+1) begin
+				if(~PE_enable[i-1]) n_PE_enable[i] = 1'd0;
+			end
+		end //WAIT
+
+		RESULT : begin
+			n_newline = 1'd1;
+			n_PE_lock = 1'd1;
+			n_s_using = `PE_Array_size -1;
+			for(i = 0; i < `PE_Array_size; i = i+1) n_PE_enable[i] = 1'd0;
+		end // RESULT
 	endcase
 end
 
@@ -209,23 +269,55 @@ always @(posedge clk or negedge rst_n) begin
 		o_v <= 0;
 		o_f <= 0;
 		o_t_valid <= 1'd0;
+		t_buf <= 2'd0;
+		v_buf <= 0;
+		f_buf <= 0;
+		t_valid_buf <= 1'b0;
 
 		//PE
-		newline <= 1'd0;
+		newline <= 1'd1;
+		newline_buf <= 1'd1;
 		s_using <= `PE_Array_size -1;
+		PE_lock <= 1'd0;
 
 		for(i = 0; i < `PE_Array_size; i = i+1) begin
 			PE_enable[i] <= 1'b0;
 			PE_s[i] <= 2'd0;
 		end
 	end else begin
-		
+		//control
+		state <= n_state;
+		counter <= n_counter;
+		first_itr <= n_first_itr;
+
+		//IO
+		o_busy <= n_o_busy;
+		o_valid <= n_o_valid;
+		o_t <= t_buf;
+		o_v <= v_buf;
+		o_f <= f_buf;
+		o_t_valid <= t_valid_buf;
+		t_buf <= n_t_buf;
+		v_buf <= n_v_buf;
+		f_buf <= n_f_buf;
+		t_valid_buf <= n_t_valid_buf;
+
+		//PE
+		newline <= n_newline;
+		newline_buf <= newline;
+		s_using <= n_s_using;
+		PE_lock <= n_PE_lock;
+
+		for(i = 0; i < `PE_Array_size; i = i+1) begin
+			PE_enable[i] <= n_PE_enable[i];
+			PE_s[i] <= n_PE_s[i];
+		end
 	end
 end
 
 generate
 	for(idx = 0; idx < `PE_Array_size; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), 
-		.lock(PE_lock_w), .newLineIn(PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(PE_s[idx]), 
+		.lock(PE_lock), .newLineIn(PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(PE_s[idx]), 
 		.tIn(PE_t[idx]), .tOut(PE_t[idx+1]), .match(i_match), .mismatch(i_mismatch), .minusAlpha(i_minusAlpha), 
 		.minusBeta(i_minusBeta), .vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut(PE_v[idx+1]), 
 		.vOut_alpha(PE_v_a[idx+1]), .fOut(PE_f[idx+1]));
