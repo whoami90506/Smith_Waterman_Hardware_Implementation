@@ -3,7 +3,6 @@
 `define DATA_PROCESSOR
 
 `include "src/SramController.v"
-`include "src/queue.v"
 `include "src/util.v"
 
 module DataProcessor (
@@ -41,10 +40,175 @@ module DataProcessor (
 	input [`PE_Array_size*2-1:0] i_s,
 	input [`PE_Array_size_log : 0] i_s_valid
 );
+//IO
+wire n_o_valid;
+
 
 //control
 reg run, n_run;
-reg first, n_first;
+wire use_sram;
+wire all_valid;
+
+//s
+wire s_valid_w;
+reg [`PE_Array_size*4-1:0] s_mem, n_s_mem;
+reg [`PE_Array_size_log +1 : 0] s_num, n_s_num;
+reg s_no_more, n_s_no_more;
+reg n_o_request_s;
+wire [1:0] n_o_s;
+reg n_o_s_last;
+
+//t
+reg t_valid_w;
+reg [`BIT_P_GROUP * `T_per_word *2 -1 : 0] t_mem, n_t_mem;
+reg [3:0] t_num, n_t_num;
+reg t_first_round, n_t_first_round;
+reg [`Max_T_size_log-1 : 0] t_counter, n_t_counter;
+reg [1:0] n_o_t;
+reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
+reg n_o_t_last;
+wire [`Sram_Word-1:0] n_o_send_data;
+reg n_o_sram_request, n_o_sram_send;
+
+reg [`BIT_P_GROUP * (`T_per_word-1) -1 : 0] t_store_mem, n_t_store_mem;
+reg [2:0] t_store_num, n_t_store_num;
+
+function [`BIT_P_GROUP-1 : 0] TVF_to_group;
+	input [1:0] t;
+	input [`V_E_F_Bit-1 : 0] v;
+	input [`V_E_F_Bit-1 : 0] f;
+
+	TVF_to_group = {t, v[`V_E_F_Bit-2 : 0], f[`V_E_F_Bit-2 : 0]};
+endfunction
+
+assign s_valid_w = (s_num != 0);
+assign use_sram = (i_T_size > `DP_LIMIT);
+assign all_valid = (~i_PE_update_t | t_valid_w) & (~i_PE_update_s | s_valid_w);
+assign n_o_valid = all_valid;
+assign n_o_s = s_mem[`PE_Array_size*4 -1 : `PE_Array_size*4 -2];
+assign n_o_send_data = {t_store_mem, TVF_to_group(i_t, i_v, i_f)};
+
+//control
+always @(*) begin
+	if(run) n_run = ~i_init;
+	else n_run = i_start_calc;
+end
+
+//s
+always @(*) begin
+	n_s_mem = s_mem;
+	n_s_num = s_num;
+	//n_o_request_s = o_request_s;
+	n_o_s_last = o_s_last;
+	n_s_no_more = s_no_more;
+
+	if(run) begin
+		n_o_request_s = (s_num < `PE_Array_size) && (i_s_valid == 0) && (~s_no_more);
+
+		if(all_valid & i_PE_update_s) begin
+			n_s_mem = s_mem << 2;
+
+			if(i_s_valid) begin
+				n_s_mem[`PE_Array_size*2 - {s_num, 1'b0} -2 +: `PE_Array_size*2] = i_s;
+				n_s_num = (~i_s_valid) ? s_num + i_s_valid -1 : s_num + `PE_Array_size -1;
+				n_o_s_last = 1'd0;
+				n_s_no_more = ((~i_s_valid) != 0);
+
+				
+			end else begin
+				n_s_num = s_num -1;
+				n_o_s_last = (s_num == 1);
+
+			end
+		end else begin
+			if(i_s_valid) begin
+				n_s_mem[`PE_Array_size*2 - {s_num, 1'b0} +: `PE_Array_size*2] = i_s;
+				n_s_num = (~i_s_valid) ? s_num + i_s_valid : s_num + `PE_Array_size;
+				n_s_no_more = ((~i_s_valid) != 0);
+			end
+		end
+
+	end else begin //~run
+		n_s_mem = s_mem;
+		n_s_num = 0;
+		n_o_request_s = i_start_calc;
+		n_o_s_last = 1'b0;
+		n_s_no_more = 1'b0;
+	end
+
+end
+
+//t
+always @(*) begin
+	t_valid_w = 1'd0;
+	n_t_mem = t_mem;
+	n_t_num = t_num;
+	n_t_first_round = t_first_round;
+	n_t_counter = t_counter;
+	n_o_t = o_t;
+	n_o_v = o_v;
+	n_o_f = o_f;
+	n_o_t_last = o_t_last;
+	n_o_sram_request = 1'd0;
+	n_o_sram_send = 1'd0;
+	n_t_store_mem = t_store_mem;
+	n_t_store_num = t_store_num;
+
+	if(run) begin
+		t_valid_w = (t_num != 0);
+		
+		if(use_sram) begin
+
+
+		end else begin // ~use_sram
+
+		end
+	end else begin//~run
+		n_t_num = 0;
+		n_t_first_round = 1'd1;
+		n_t_counter = 0;
+		n_o_t_last = 1'd0;
+		n_t_store_num = 0;
+
+	end
+
+
+end
+
+always @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		//IO
+		o_valid <= 1'b0;
+
+		//cotrol
+		run <= 1'b0;
+
+		//s
+		s_mem <= {(`PE_Array_size*4){1'd0}};
+		s_num <= 0;
+		o_request_s <= 1'd0;
+		o_s <= 2'd0;
+		o_s_last <= 1'b0;
+		s_no_more <= 1'b0;
+
+		//t
+		t_mem <= {(`BIT_P_GROUP * `T_per_word *2){1'd0}};
+		t_num <= 4'd0;
+		t_first_round <= 1'b1;
+		t_counter <= 0;
+		o_t <= 2'd0;
+		o_v <= 0;
+		o_f <= 0;
+		o_t_last <= 1'd0;
+		o_send_data <= {(`Sram_Word){1'd0}};
+		o_sram_request <= 1'b0;
+		o_sram_send <= 1'b0;
+		t_store_mem <= {(`BIT_P_GROUP * (`T_per_word-1) ){1'd0}};
+		t_store_num <= 3'd0;
+	end else begin
+		 
+	end
+end
 
 endmodule
 `endif//DATA_PROCESSOR
