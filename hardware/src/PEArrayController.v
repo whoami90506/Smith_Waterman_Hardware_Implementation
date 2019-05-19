@@ -45,6 +45,8 @@ integer i;
 reg n_o_busy, n_o_valid, n_o_t_valid;
 reg [1:0] n_o_t;
 reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
+reg [1:0] buf_t;
+reg [`V_E_F_Bit-1:0] buf_v, buf_f;
 
 //control
 localparam IDLE    = 3'd0;
@@ -79,10 +81,10 @@ wire [`V_E_F_Bit-1 :0] PE_f [0 : `PE_Array_size];
 wire [`V_E_F_Bit * `PE_Array_size -1 : 0] PE_v_1D;
 
 //assignment
-assign PE_t[0] = i_t;
-assign PE_v[0] = i_v;
-assign PE_v_a[0] = i_v + i_minusAlpha;
-assign PE_f[0] = i_f;
+assign PE_t[0] = buf_t;
+assign PE_v[0] = buf_v;
+assign PE_v_a[0] = buf_v + i_minusAlpha;
+assign PE_f[0] = buf_f;
 assign PE_newline[0] = newline;
 
 //control
@@ -209,6 +211,9 @@ always @(posedge clk or negedge rst_n) begin
 		o_v <= 0;
 		o_f <= 0;
 		o_t_valid <= 1'd0;
+		buf_t <= 2'd0;
+		buf_v <= 0;
+		buf_f <= 0;
 
 		//PE
 		newline <= 1'd0;
