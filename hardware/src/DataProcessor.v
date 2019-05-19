@@ -3,6 +3,7 @@
 `define DATA_PROCESSOR
 
 `include "src/SramController.v"
+`include "src/queue.v"
 `include "src/util.v"
 
 module DataProcessor (
@@ -41,6 +42,9 @@ module DataProcessor (
 	input [`PE_Array_size_log : 0] i_s_valid
 );
 
-endmodule
+//control
+reg run, n_run;
+reg first, n_first;
 
+endmodule
 `endif//DATA_PROCESSOR
