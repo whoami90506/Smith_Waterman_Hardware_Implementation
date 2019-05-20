@@ -73,9 +73,7 @@ reg n_o_sram_request, n_o_sram_send;
 reg [2:0] t_store_num, n_t_store_num;
 
 //queue
-reg q_store, n_q_store;
-reg [`BIT_P_GROUP-1 : 0] q_store_data, n_q_store_data;
-reg q_take, n_q_take;
+reg q_take_w;
 wire [`BIT_P_GROUP-1 : 0] q_take_data;
 wire q_empty;
 
@@ -157,11 +155,11 @@ always @(*) begin
 	n_o_sram_send = 1'd0;
 	n_o_send_data = o_send_data;
 	n_t_store_num = t_store_num;
+	q_take_w = 1'd0;
 
 	if(run) begin
-		t_valid_w = (t_num != 0);
-
 		if(use_sram) begin
+			t_valid_w = (t_num != 0);
 			n_o_sram_request = (t_num < `T_per_word) && (~i_request_data[`Sram_Word-1]);
 
 			//store
@@ -171,7 +169,7 @@ always @(*) begin
 				n_o_sram_send = (t_store_num == 6);
 			end
 
-			if(i_request_data[`Sram_Word-1] & i_PE_update_t) begin
+			if(all_valid & i_PE_update_t) begin
 				n_o_t = t_mem[`BIT_P_GROUP * `T_per_word *2 -1 -: 2];
 				n_o_v = {1'b0, t_mem[`BIT_P_GROUP * `T_per_word *2 -3 -: `V_E_F_Bit-1]};
 				n_o_f = {1'b0, t_mem[`BIT_P_GROUP * `T_per_word *2  -`V_E_F_Bit-1 -3 -: `V_E_F_Bit-1]};
@@ -196,7 +194,42 @@ always @(*) begin
 
 
 		end else begin // ~use_sram
+			t_valid_w = (t_num != 0) | q_empty | i_t_valid;
+			n_o_sram_request = (t_num < `T_per_word) && (~i_request_data[`Sram_Word-1]) && t_first_round;
 
+			if(i_request_data[`Sram_Word-1]) begin
+				n_t_mem[`BIT_P_GROUP * (`T_per_word *2 - t_num) -1 -: `BIT_P_GROUP * `T_per_word] = i_request_data[`Sram_Word-5 : 0];
+				n_t_num = i_request_data[`Sram_Word-2 -: 3] ? t_num + i_request_data[`Sram_Word-2 -: 3]: t_num + 7;
+			end
+
+			if(all_valid & i_PE_update_t) begin
+				n_t_counter = (t_counter +1 == i_T_size) ? 0 : t_counter;
+				n_o_t_last = (t_counter +1 == i_T_size);
+				if(t_first_round)n_t_first_round = ~(t_counter +1 == i_T_size);
+
+				if(t_num != 0) begin
+					n_o_t = t_mem[`BIT_P_GROUP * `T_per_word *2 -1 -: 2];
+					n_o_v = {1'b0, t_mem[`BIT_P_GROUP * `T_per_word *2 -3 -: `V_E_F_Bit-1]};
+					n_o_f = {1'b0, t_mem[`BIT_P_GROUP * `T_per_word *2  -`V_E_F_Bit-1 -3 -: `V_E_F_Bit-1]};
+					n_t_mem = t_mem << `BIT_P_GROUP;
+
+					if(i_request_data[`Sram_Word-1]) begin
+						n_t_mem[`BIT_P_GROUP * (`T_per_word *2 - t_num-1) -1 -: `BIT_P_GROUP * `T_per_word] = i_request_data[`Sram_Word-5 : 0]; 
+						n_t_num = i_request_data[`Sram_Word-2 -: 3] ? t_num + i_request_data[`Sram_Word-2 -: 3] -1 : t_num + 7 -1;
+					end else begin // no new data
+						n_t_num = t_num -1;
+					end
+				end else if (~q_empty) begin
+					q_take_w = 1'd1;
+					n_o_t = q_take_data[`BIT_P_GROUP-1 : `BIT_P_GROUP-2];
+					n_o_v = {1'd0, q_take_data[`BIT_P_GROUP-3 -: `V_E_F_Bit-1]};
+					n_o_f = {1'd0, q_take_data[0 +: `V_E_F_Bit-1]};
+				end else begin
+					n_o_t = i_t;
+					n_o_v = i_v;
+					n_o_f = i_f;
+				end
+			end
 		end
 	end else begin//~run
 		t_valid_w = 1'd0;
@@ -244,7 +277,8 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 queue cache(.clk(clk), .rst_n(rst_n), .i_init(i_init), 
-	.i_store(q_store), .i_data(q_store_data), .i_take(q_take), .o_data(q_take_data), .o_empty_w(q_empty));
+	.i_store(i_t_valid & ((all_valid & i_PE_update_t) & ((t_num == 0) & q_empty))), .i_data(TVF_to_group(i_t, i_v, i_f)),
+	.i_take(q_take_w), .o_data(q_take_data), .o_empty_w(q_empty));
 
 endmodule
 `endif//DATA_PROCESSOR
