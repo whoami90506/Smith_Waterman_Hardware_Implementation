@@ -128,7 +128,7 @@ always @(*) begin
 
 		FINAL_T : if(i_data_valid & i_t_last) n_state = WAIT;
 
-		WAIT : if(~PE_enable) n_state = RESULT;
+		WAIT : if(PE_enable == 0) n_state = RESULT;
 
 		RESULT : n_state = IDLE;
 	endcase
