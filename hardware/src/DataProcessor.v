@@ -277,7 +277,7 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 queue cache(.clk(clk), .rst_n(rst_n), .i_init(i_init), 
-	.i_store(i_t_valid & ((all_valid & i_PE_update_t) & ((t_num == 0) & q_empty))), .i_data(TVF_to_group(i_t, i_v, i_f)),
+	.i_store(i_t_valid & ~(((all_valid & i_PE_update_t) & ((t_num == 0) & q_empty)))), .i_data(TVF_to_group(i_t, i_v, i_f)),
 	.i_take(q_take_w), .o_data(q_take_data), .o_empty_w(q_empty));
 
 endmodule
