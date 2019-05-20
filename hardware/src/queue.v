@@ -10,9 +10,9 @@ module queue (
 	input i_init,
 
 	input i_store,
-	input [`BIT_P_GROUP] i_data,
+	input [`BIT_P_GROUP-1 : 0] i_data,
 	input i_take,
-	output reg [`BIT_P_GROUP] o_data,
+	output reg [`BIT_P_GROUP -1 : 0] o_data,
 	output o_empty_w
 );
 
@@ -20,8 +20,8 @@ integer i;
 genvar idx;
 
 //IO
-reg [`BIT_P_GROUP] n_o_data;
-wire [`BIT_P_GROUP] nr_o_data;
+reg [`BIT_P_GROUP-1 : 0] n_o_data;
+wire [`BIT_P_GROUP-1 : 0] nr_o_data;
 
 //contorl
 reg [`QUEUE_SIZE_LOG-1 : 0] r_addr, n_r_addr;
@@ -54,10 +54,10 @@ assign nr_o_data = i_init ? {`BIT_P_GROUP{1'b0}} : n_o_data;
 assign nr_r_addr = i_init ? 0 : n_r_addr;
 assign nr_w_addr = i_init ? 0 : n_w_addr;
 generate
-	for(idx = 0; idx < `QUEUE_SIZE; idx = idx +1)nr_mem[idx] = i_init ? {`BIT_P_GROUP{1'b0}}
+	for(idx = 0; idx < `QUEUE_SIZE; idx = idx +1)assign nr_mem[idx] = i_init ? {`BIT_P_GROUP{1'b0}} : n_mem[idx];
 endgenerate
 
-always @(posedge clk or negedge rst_n) begin :
+always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		 o_data <= {`BIT_P_GROUP{1'b0}};
 		 r_addr <= 0;
