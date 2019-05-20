@@ -42,12 +42,11 @@ genvar idx;
 integer i;
 
 //IO
-reg t_valid_buf;
+reg t_valid_buf, t_valid_buf1;
 reg n_o_busy, n_o_valid, n_t_valid_buf;
-wire [1:0] n_t_buf;
-wire [`V_E_F_Bit-1:0] n_v_buf, n_f_buf;
 reg [1:0] t_buf;
-reg [`V_E_F_Bit-1:0] v_buf, f_buf;
+reg [`V_E_F_Bit-1:0] v_buf, f_buf, v_a_buf;
+wire [`V_E_F_Bit-1:0] n_v_a_buf;
 
 //control
 localparam IDLE    = 3'd0;
@@ -83,13 +82,15 @@ wire [`V_E_F_Bit * `PE_Array_size -1 : 0] PE_v_1D;
 //assignment
 assign PE_t[0] = t_buf;
 assign PE_v[0] = v_buf;
-assign PE_v_a[0] = v_buf + i_minusAlpha;
+assign PE_v_a[0] = v_a_buf;
 assign PE_f[0] = f_buf;
 assign PE_newline[0] = newline_buf;
 
-assign n_t_buf = PE_t[{1'b0, s_using} +1];
-assign n_v_buf = PE_v[{1'b0, s_using} +1];
-assign n_f_buf = PE_f[{1'b0, s_using} +1];
+assign n_v_a_buf = i_v + i_minusAlpha;
+assign n_o_t = PE_t[{1'b0, s_using} +1];
+assign n_o_v = PE_v[{1'b0, s_using} +1];
+assign n_o_f = PE_f[{1'b0, s_using} +1];
+
 
 //control
 always @(*) begin
@@ -272,7 +273,9 @@ always @(posedge clk or negedge rst_n) begin
 		t_buf <= 2'd0;
 		v_buf <= 0;
 		f_buf <= 0;
+		v_a_buf <= 0;
 		t_valid_buf <= 1'b0;
+		t_valid_buf1 <= 1'b0;
 
 		//PE
 		newline <= 1'd1;
@@ -293,13 +296,15 @@ always @(posedge clk or negedge rst_n) begin
 		//IO
 		o_busy <= n_o_busy;
 		o_valid <= n_o_valid;
-		o_t <= t_buf;
-		o_v <= v_buf;
-		o_f <= f_buf;
-		o_t_valid <= t_valid_buf;
-		t_buf <= n_t_buf;
-		v_buf <= n_v_buf;
-		f_buf <= n_f_buf;
+		o_t <= n_o_t;
+		o_v <= n_o_v;
+		o_f <= n_o_f;
+		o_t_valid <= t_valid_buf1;
+		t_buf <= i_t;
+		v_buf <= i_v;
+		f_buf <= i_f;
+		v_a_buf <= n_v_a_buf;
+		t_valid_buf1 <= t_valid_buf;
 		t_valid_buf <= n_t_valid_buf;
 
 		//PE
