@@ -113,6 +113,7 @@ always @(negedge clk) begin
 			cnt = $fscanf(fp_param, "%b\n", param);
 			$readmemb($sformatf("%s_s_%0d.dat", `DATA, s_num_itr), s_mem);
 			param_valid = 1'd1;
+			start_cal = 1'd1;
 			stage = 6;
 		end
 
