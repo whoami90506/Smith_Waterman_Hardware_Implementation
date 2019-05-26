@@ -18,22 +18,24 @@ module DataProcessor (
 	input [`Max_T_size_log-1 : 0] i_T_size,
 
 	//PEArrayController
-	output reg o_valid,
+	output reg o_lock,
 	input i_init,
 
-	input i_PE_update_s,
-	output reg [1:0] o_s,
+	output reg [`PE_Array_size*2-1:0] o_s,
 	output reg o_s_last,
+	output reg [`PE_Array_size_log-1 : 0] o_s_addr,
 
-	input i_PE_update_t,
 	output reg [1:0] o_t,
 	output reg [`V_E_F_Bit-1:0] o_v,
+	output reg [`V_E_F_Bit-1:0] o_v_a,
 	output reg [`V_E_F_Bit-1:0] o_f,
+	output reg o_t_newline,
+	output reg o_enable_0,
+
 	input i_t_valid,
 	input [1:0] i_t,
 	input [`V_E_F_Bit-1 : 0] i_v,
 	input [`V_E_F_Bit-1 : 0] i_f,
-	output reg o_t_last,
 
 	//top
 	input i_start_calc,
@@ -41,17 +43,12 @@ module DataProcessor (
 	input [`PE_Array_size*2-1:0] i_s,
 	input [`PE_Array_size_log : 0] i_s_valid
 );
-//IO
-wire n_o_valid;
-
 
 //control
 reg run, n_run;
 wire use_sram;
-wire all_valid;
 
 //s
-wire s_valid_w;
 reg [`PE_Array_size*4-1:0] s_mem, n_s_mem;
 reg [`PE_Array_size_log +1 : 0] s_num, n_s_num;
 reg s_no_more, n_s_no_more;
@@ -60,14 +57,15 @@ wire [1:0] n_o_s;
 reg n_o_s_last;
 
 //t
-reg t_valid_w;
+reg [`Max_T_size_log-1 : 0] t_counter, n_t_counter;
+reg [1:0] n_o_t;
+reg [`V_E_F_Bit-1:0] n_o_v, n_o_f, n_o_v_a;
+reg n_o_t_newline, n_o_t_enable_0;
+
+//sram
 reg [`BIT_P_GROUP * `T_per_word *2 -1 : 0] t_mem, n_t_mem;
 reg [3:0] t_num, n_t_num;
 reg t_first_round, n_t_first_round;
-reg [`Max_T_size_log-1 : 0] t_counter, n_t_counter;
-reg [1:0] n_o_t;
-reg [`V_E_F_Bit-1:0] n_o_v, n_o_f;
-reg n_o_t_last;
 reg [`Sram_Word-1:0] n_o_send_data;
 reg n_o_sram_request, n_o_sram_send;
 reg [2:0] t_store_num, n_t_store_num;
@@ -85,10 +83,7 @@ function [`BIT_P_GROUP-1 : 0] TVF_to_group;
 	TVF_to_group = {t, v[`V_E_F_Bit-2 : 0], f[`V_E_F_Bit-2 : 0]};
 endfunction
 
-assign s_valid_w = (s_num != 0);
 assign use_sram = (i_T_size > `DP_LIMIT);
-assign all_valid = (~i_PE_update_t | t_valid_w) & (~i_PE_update_s | s_valid_w);
-assign n_o_valid = all_valid;
 assign n_o_s = s_mem[`PE_Array_size*4 -1 : `PE_Array_size*4 -2];
 
 //control

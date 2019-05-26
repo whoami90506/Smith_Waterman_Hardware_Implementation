@@ -21,21 +21,23 @@ module PEArrayController (
 	output reg o_valid,
 
 	//Data Processor
-	input i_data_valid,
+	input i_lock,
 
-	output reg o_update_s_w,
-	input [1:0] i_s,
+	input [`PE_Array_size*2-1:0] i_s,
 	input i_s_last,
+	input [`PE_Array_size_log-1 : 0] i_s_addr,
 
-	output reg  o_update_t_w,
 	output reg [1:0] o_t,
 	output reg [`V_E_F_Bit-1:0] o_v,
 	output reg [`V_E_F_Bit-1:0] o_f,
 	output reg o_t_valid,
+
 	input [1:0] i_t,
 	input [`V_E_F_Bit-1 : 0] i_v,
+	input [`V_E_F_Bit-1:0] i_v_a,
 	input [`V_E_F_Bit-1 : 0] i_f,
-	input i_t_last
+	input i_t_newline,
+	input i_enable_0,
 );
 
 genvar idx;
