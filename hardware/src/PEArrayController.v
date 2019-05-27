@@ -123,6 +123,40 @@ always @(*) begin
 	endcase
 end
 
+always @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		//control
+		state <= IDLE;
+		s_using <= 0;
+
+		//IO
+		o_valid <= 1'b0;
+		o_t <= 2'd0;
+		o_v <= 0;
+		o_f <= 0;
+		o_t_valid <= 1'b0;
+		t_valid_buf <= 1'b0;
+
+		//PE
+		PE_enable <= {(`PE_Array_size-1){1'b0}};
+	end else begin
+		//control
+		state <= n_state;
+		s_using <= n_s_using;
+
+		//IO
+		o_valid <= n_o_valid;
+		o_t <= n_o_t;
+		o_v <= n_o_v;
+		o_f <= n_o_f;
+		o_t_valid <= n_o_t_valid;
+		t_valid_buf <= n_t_valid_buf;
+
+		//PE
+		PE_enable <= n_PE_enable;
+	end
+end
+
 PE PE_cell_first(.clk(clk), .rst(rst_n), .enable(i_enable_0), .lock(i_lock), .newLineIn(i_t_newline), .newLineOut(PE_newline[0]), 
 	.s(i_s[`PE_Array_size*2-1 -: 2]), .tIn(i_t), .tOut(PE_t[0]), .minusAlpha(i_minusAlpha), .minusBeta(i_minusBeta), 
 	.mismatch(i_mismatch), .match(i_match), .vIn(i_v), .vIn_alpha(i_v_a), .fIn(i_f), .vOut(PE_v[0]), .vOut_alpha(PE_v_a[0]), 
