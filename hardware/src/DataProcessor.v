@@ -46,7 +46,6 @@ module DataProcessor (
 );
 
 //control
-
 reg [2:0]state, n_state;
 wire use_sram;
 
@@ -67,13 +66,13 @@ reg n_o_t_newline, n_o_t_enable_0;
 //sram
 reg [`BIT_P_GROUP * `T_per_word *2 -1 : 0] t_mem, n_t_mem;
 reg [3:0] t_num, n_t_num;
-reg t_first_round, n_t_first_round;
 reg [`Sram_Word-1:0] n_o_send_data;
 reg n_o_sram_request, n_o_sram_send;
 reg [2:0] t_store_num, n_t_store_num;
 
 //queue
-reg q_take_w;
+reg q_take, n_q_take;
+reg q_store, n_q_store;
 wire [`BIT_P_GROUP-1 : 0] q_take_data;
 wire q_empty;
 
@@ -86,7 +85,6 @@ function [`BIT_P_GROUP-1 : 0] TVF_to_group;
 endfunction
 
 assign use_sram = (i_T_size > `DP_LIMIT);
-// assign n_o_s = s_mem[`PE_Array_size*4 -1 : `PE_Array_size*4 -2];
 
 // queue cache(.clk(clk), .rst_n(rst_n), .i_init(i_init), 
 // 	.i_store(i_t_valid & ~(((all_valid & i_PE_update_t) & ((t_num == 0) & q_empty)))), .i_data(TVF_to_group(i_t, i_v, i_f)),
