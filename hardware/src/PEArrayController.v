@@ -38,7 +38,6 @@ module PEArrayController (
 	input i_t_newline,
 	input i_enable_0
 );
-
 genvar idx;
 integer i;
 
@@ -121,7 +120,6 @@ always @(*) begin
 			n_o_valid = 1'b1;
 			n_o_t_valid = 1'b0;
 		end
-		
 	endcase
 end
 
