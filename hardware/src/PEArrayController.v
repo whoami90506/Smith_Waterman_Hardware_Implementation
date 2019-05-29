@@ -103,7 +103,7 @@ always @(*) begin
 		end
 
 		CALC :begin
-			n_state = (PE_enable == 0) && ~i_enable_0 ? END : CALC;
+			n_state = (PE_enable_all == {`PE_Array_size{1'b0}})  ? END : CALC;
 			n_s_using = i_s_last ? i_s_addr : s_using;
 			n_o_t_valid = t_valid_buf && (s_using == `PE_Array_size-1);
 
@@ -158,13 +158,13 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 PE PE_cell_first(.clk(clk), .rst(rst_n), .enable(i_enable_0), .lock(i_lock), .newLineIn(i_t_newline), .newLineOut(PE_newline[0]), 
-	.s(i_s[`PE_Array_size*2-1 -: 2]), .tIn(i_t), .tOut(PE_t[0]), .minusAlpha(i_minusAlpha), .minusBeta(i_minusBeta), 
+	.s(i_s[1:0]), .tIn(i_t), .tOut(PE_t[0]), .minusAlpha(i_minusAlpha), .minusBeta(i_minusBeta), 
 	.mismatch(i_mismatch), .match(i_match), .vIn(i_v), .vIn_alpha(i_v_a), .fIn(i_f), .vOut(PE_v[0]), .vOut_alpha(PE_v_a[0]), 
 	.fOut(PE_f[0]));
 
 generate
 	for(idx = 0; idx < `PE_Array_size-1; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), .lock(i_lock), 
-		.newLineIn (PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(i_s[(`PE_Array_size -idx -1)*2-1 -: 2]), .tIn(PE_t[idx]), 
+		.newLineIn (PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(i_s[2*(idx+1) +: 2]), .tIn(PE_t[idx]), 
 		.tOut(PE_t[idx+1]), .minusAlpha(i_minusAlpha), .minusBeta(i_minusBeta), .mismatch(i_mismatch), .match(i_match), 
 		.vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut(PE_v[idx+1]), .vOut_alpha(PE_v_a[idx+1]), .fOut(PE_f[idx+1]));
 endgenerate
