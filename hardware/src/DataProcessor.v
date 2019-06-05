@@ -58,9 +58,10 @@ localparam END           = 3'd7;
 reg [2:0] state, n_state;
 reg n_o_busy;
 wire use_sram_w;
-wire t_last_w;
+wire t_nxt_last_w, s_nxt_last_w;
 wire s_empty_w;
 reg t_empty_w;
+reg valid_w;
 
 //s
 reg [`PE_Array_size*4-1:0] s_mem, n_s_mem;
@@ -79,10 +80,11 @@ reg n_o_t_newline, n_o_t_enable_0, n_o_lock;
 
 //sram
 reg [`BIT_P_GROUP * `T_per_word *2 -1 : 0] t_sram_mem, n_t_sram_mem;
-reg [3:0] t_sram_num, n_t_sram_num;
+reg [3:0] t_sram_PE_num, n_t_sram_PE_num;
 reg [`Sram_Word-1:0] n_o_send_data;
 reg n_o_sram_request, n_o_sram_send;
 reg [2:0] t_store_num, n_t_store_num;
+reg [`Max_T_size_log-1 : 0] t_store_counter, n_t_store_counter;
 
 //cache
 reg [`BIT_P_GROUP-1 : 0]   cache [0 : 15];
@@ -100,7 +102,8 @@ function [`BIT_P_GROUP-1 : 0] TVF_to_group;
 endfunction
 
 assign use_sram_w = (i_T_size > `DP_LIMIT);
-assign t_last_w = (t_counter-1 == i_T_size);
+assign t_nxt_last_w = (t_counter-1 == i_T_size);
+assign s_nxt_last_w = (s_num == 1) && s_no_more;
 assign cache_empty_w = (cache_read_addr == cache_write_addr);
 assign s_empty_w = (s_num == 0) && (~s_no_more);
 
@@ -117,29 +120,66 @@ always @(*) begin
 			else n_state = IDLE;
 		end
 
+		//len(T) > 64
 		SRAM_ST : begin
 			t_empty_w = (t_sram_num == 0);
-			case ({o_s_last, t_last_w})
-				2'b11 : n_state = END;
-				2'b10 : n_state = SRAM_T;
-				default : n_state = SRAM_ST;
-			endcase
+			valid_w = (~s_empty_w) & (~t_empty_w);
+
+			n_state = (valid_w && (s_nxt_last_w || (o_s_addr == `PE_Array_size-2) ) ) ? SRAM_T : SRAM_ST;
 		end
 	endcase
 end
 
 //s
 always @(*) begin
+	n_o_s = o_s;
+	n_s_mem = s_mem;
+	n_s_num = s_num;
+	n_o_s_addr = o_s_addr;
+	n_s_no_more = s_no_more;
+	n_o_request_s = 1'b0;
+	n_o_s_last = o_s_last;
+
 	case (state)
+		SRAM_ST : begin
+			case ({valid_w, i_s_valid})
+				2'b11 : begin
+					n_o_s[2*(o_s_addr+1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					n_s_mem = s_mem << 2;
+					n_s_mem[ (`PE_Array_size*2 - s_num +1)*2 -1 -: `PE_Array_size*2] = i_s;
+					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] -1 : s_num + `PE_Array_size -1;
+					n_o_s_addr = o_s_addr+1;
+					n_s_no_more = (~i_s_valid) ? 1'b1 : 1'b0;
+					n_o_s_last = 1'b0;
+				end
+				2'b10 : begin
+					n_o_s[2*(o_s_addr+1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					n_s_mem = s_mem << 2;
+					n_s_num = s_num -1;
+					n_o_s_addr = o_s_addr+1;
+					n_o_request_s = (s_num < `PE_Array_size) && (~s_no_more);
+					n_o_s_last = s_nxt_last_w;
+				end
+				2'b01 : begin
+					n_s_mem[ (`PE_Array_size*2 - s_num)*2 -1 -: `PE_Array_size*2] = i_s;
+					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] : s_num + `PE_Array_size;
+					n_s_no_more = (~i_s_valid) ? 1'b1 : 1'b0;
+					n_o_s_last = 1'b0;
+				end
+				2'b00 : begin
+					n_o_request_s = (s_num < `PE_Array_size) && (~s_no_more);
+					n_o_s_last = s_nxt_last_w;
+				end
+			endcase
+		end//SRAM_ST
 	
 		//IDLE
 		default : begin
 			n_s_mem = {(`PE_Array_size*4){1'b0}};
 			n_s_num = 0;
-			n_o_s_addr = 0;
+			n_o_s_addr = {`PE_Array_size_log{1'b1}};
 			n_s_no_more = 1'b0;
 			n_o_request_s = 1'b0;
-			n_o_s = {(`PE_Array_size*2){1'b0}};
 			n_o_s_last = 1'b0;
 		end
 	endcase
@@ -161,7 +201,7 @@ always @(*) begin
 			n_o_lock = 1'd1;
 
 			n_t_sram_mem = {(`BIT_P_GROUP*`T_per_word*2){1'b0}};
-			n_t_sram_num = 4'd0;
+			n_t_sram_PE_num = 4'd0;
 			n_o_sram_request = 1'b0;
 
 			n_cache_read_addr = 4'd0;
@@ -180,6 +220,7 @@ always @(*) begin
 			n_o_send_data = {`Sram_Word{1'b0}};
 			n_o_sram_send = 1'b0;
 			n_t_store_num = 3'd0;
+			n_t_store_counter = 0;
 
 			n_cache_write_addr = 4'd0;
 		end

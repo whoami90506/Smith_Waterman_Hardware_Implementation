@@ -96,7 +96,7 @@ always @(*) begin
 
 		OPEN : begin
 			if(~i_lock) begin
-				n_state = (i_s_last | (i_s_addr == `PE_Array_size-1) ) ? CALC : OPEN;
+				n_state = (i_s_last | (i_s_addr == `PE_Array_size-1) | i_t_last ) ? CALC : OPEN;
 				n_s_using = i_s_addr;
 				n_PE_enable[i_s_addr] = ~i_s_last;
 			end
