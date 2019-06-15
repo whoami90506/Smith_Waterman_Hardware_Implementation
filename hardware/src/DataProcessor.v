@@ -16,6 +16,7 @@ module DataProcessor (
 	output reg o_sram_send, 
 	output reg [`Sram_Word-1:0] o_send_data,
 	input [`Max_T_size_log-1 : 0] i_T_size,
+	output reg o_sram_init,
 
 	//PEArrayController
 	output reg o_lock,
@@ -42,7 +43,8 @@ module DataProcessor (
 	output reg o_busy,
 	output reg o_request_s,
 	input [`PE_Array_size*2-1:0] i_s,
-	input [`PE_Array_size_log : 0] i_s_valid
+	input [`PE_Array_size_log : 0] i_s_valid,
+	input [`V_E_F_Bit-1 : 0] i_minusA
 );
 integer i;
 
@@ -85,6 +87,7 @@ reg [`Sram_Word-1:0] n_o_send_data;
 reg n_o_sram_request, n_o_sram_send;
 reg [2:0] t_store_num, n_t_store_num;
 reg [`Max_T_size_log-1 : 0] t_store_counter, n_t_store_counter;
+reg n_o_sram_init;
 
 //cache
 reg [`BIT_P_GROUP-1 : 0]   cache [0 : 15];
@@ -122,7 +125,7 @@ always @(*) begin
 
 		//len(T) > 64
 		SRAM_ST : begin
-			t_empty_w = (t_sram_num == 0);
+			t_empty_w = (t_sram_PE_num == 0);
 			valid_w = (~s_empty_w) & (~t_empty_w);
 
 			n_state = (valid_w && (s_nxt_last_w || (o_s_addr == `PE_Array_size-2) ) ) ? SRAM_T : SRAM_ST;
@@ -187,20 +190,56 @@ end
 
 //t to PE
 always @(*) begin
+	n_t_counter = t_counter;
+	n_o_t = o_t;
+	n_o_v = o_v;
+	n_o_v_a = o_v_a;
+	n_o_f = o_f;
+	n_o_t_newline = 1'd0;
+	n_o_t_enable_0 = 1'd1;
+	n_o_lock = 1'd0;
+
+	n_t_sram_mem = t_sram_mem;
+	n_t_sram_PE_num = t_sram_PE_num;
+	n_o_sram_request = 1'b0;
+	n_o_sram_init = 1'b0;
+
+	n_cache_read_addr = cache_read_addr;
+
 	case (state)
+		SRAM_ST : begin
+			if(valid_w) begin
+				n_t_counter = (t_counter >= i_T_size - 1) ? 0 : t_counter +1;
+				n_o_t   = t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -1 -: 2];
+				n_o_v   = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -3 -: `V_E_F_Bit-1]};
+				n_o_v_a = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -3 -: `V_E_F_Bit-1]} + i_minusA;
+				n_o_f   = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 - `V_E_F_Bit -2 -: `V_E_F_Bit-1]};
+				n_o_t_newline = (t_counter >= i_T_size - 1);
+
+				n_t_sram_mem = t_sram_mem << `BIT_P_GROUP;
+				n_t_sram_PE_num = t_sram_PE_num - 4'd1;
+				n_o_sram_request = (t_sram_PE_num < `T_per_word + 4'd1); 
+
+				if(i_request_data[`Sram_Word-1]) begin
+					n_t_sram_mem[`BIT_P_GROUP * (2 * `T_per_word - t_sram_PE_num +1)-1 -: `BIT_P_GROUP * `T_per_word] = i_request_data[0 +: `BIT_P_GROUP * `T_per_word];
+					n_t_sram_PE_num = (i_request_data[`Sram_Word-2 -: `HEADER_BIT-1]) ?  
+						t_sram_PE_num + {1'b0, i_request_data[`Sram_Word-2 -: `HEADER_BIT-1]} - 4'd1 : 
+						t_sram_PE_num + `T_per_word - 4'd1;
+					n_o_sram_request = 1'b0;
+				end
+
+			end else begin
+				n_o_lock = 1'd1;
+			end
+			endcase
+		end
 	
 		//IDLE
 		default : begin
-			n_t_counter = 0;
-			n_o_t = 2'd0;
-			n_o_v = 0;
-			n_o_v_a = 0;
-			n_o_f = 0;
-			n_o_t_newline = 1'd0;
+			n_t_counter = {`Max_T_size_log{1'b1}};
 			n_o_t_enable_0 = 1'd0;
 			n_o_lock = 1'd1;
 
-			n_t_sram_mem = {(`BIT_P_GROUP*`T_per_word*2){1'b0}};
 			n_t_sram_PE_num = 4'd0;
 			n_o_sram_request = 1'b0;
 
