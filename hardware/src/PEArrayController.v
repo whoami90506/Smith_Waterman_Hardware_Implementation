@@ -19,6 +19,9 @@ module PEArrayController (
 	output [`V_E_F_Bit-1:0] o_result,
 	output reg o_valid,
 
+	//sram
+	input [`Max_T_size_log-1 : 0] i_t_size,
+
 	//Data Processor
 	input i_lock,
 
@@ -96,7 +99,7 @@ always @(*) begin
 
 		OPEN : begin
 			if(~i_lock) begin
-				n_state = (i_s_last | (i_s_addr == `PE_Array_size-1) | i_t_last ) ? CALC : OPEN;
+				n_state = (i_s_last || (i_s_addr == `PE_Array_size-1) || (i_s_addr == i_t_size -1) ) ? CALC : OPEN;
 				n_s_using = i_s_addr;
 				n_PE_enable[i_s_addr] = ~i_s_last;
 			end
