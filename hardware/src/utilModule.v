@@ -84,7 +84,7 @@ input      [ADDR_WIDTH-1:0] AA;
 input      [WORD_WIDTH-1:0] DA;
 
 localparam WIDTH = WORD_WIDTH;
-localparam DEPTH = 1 << (ADDR_WIDTH -1);
+localparam DEPTH = 1 << (ADDR_WIDTH);
 
 reg [WIDTH-1:0] data [0:DEPTH-1];
 wire INVALIDA = AA >= DEPTH;

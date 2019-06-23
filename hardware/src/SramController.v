@@ -3,7 +3,10 @@
 `define SRAM_CONTROLLER
 
 `include "src/util.v"
+
+`ifdef STANDARD_SRAM
 `include "Memory/sram_1024x8_t13/sram_1024x8_t13.v"
+`endif
 
 module SramController (
 	input clk,    // Clock
@@ -36,10 +39,15 @@ reg [`Sram_Addr_log-1:0] A, n_A;
 reg [`Sram_Word-1 : 0] D, n_D;
 
 genvar idx;
+
+`ifdef STANDARD_SRAM
 generate
 	for(idx = 0; idx < 32; idx = idx +1) sram_1024x8_t13 sram(.Q(Q[8*idx+7 : 8*idx]), .CLK(clk), .CEN(CEN), 
 		.WEN(WEN), .A(A), .D(D[8*idx+7 : 8*idx]));
 endgenerate
+`else 
+sram_sp_test sram(.QA(Q), .CLKA(clk), .CENA(CEN), .WENA(WEN), .AA(A), .DA(D));
+`endif
 
 //control
 localparam IDLE = 3'd0;

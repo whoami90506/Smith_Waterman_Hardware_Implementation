@@ -21,7 +21,7 @@ bool readfile(ifstream& ifs){
     ifs >> _match;
     if(ifs.eof())return false;
     if(alpha < 0)return false;
-    ifs >> _mismatch >> alpha >> beta >> seqB;
+    ifs >> _mismatch >> alpha >> beta;
 
     return true;
 }
@@ -135,24 +135,17 @@ float calculate(){
 }
 
 int main(int argc, char** argv){
-    if(argc != 3){
-        cout << "Usage: exec [input_T_file] [input_S_file]\n";
+    if(argc != 2){
+        cout << "Usage: exec [input_file]\n";
         return 1;
     }
 
-    ifstream ifs_t(argv[1]);
-    if(!ifs_t.is_open()){
-        cout << "Error: file \"" << argv[1] << "\" doesn't exist!\n";
-        return 1;
-    }
-    ifs_t >> seqA;
-    ifs_t.close();
-
-    ifstream ifs(argv[2]);
+    ifstream ifs(argv[1]);
     if(!ifs.is_open()){
         cout << "Error: file \"" << argv[1] << "\" doesn't exist!\n";
         return 1;
     }
+    ifs >> seqA >> seqB;
 
     //calculate
     while(readfile(ifs)){

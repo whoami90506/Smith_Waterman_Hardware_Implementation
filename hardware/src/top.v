@@ -2,8 +2,6 @@
 `else
 `define TOP
 
-`timescale 1 ns/1 ps
-
 `include "src/DataProcessor.v"
 `include "src/SramController.v"
 `include "src/PEArrayController.v"
@@ -29,9 +27,8 @@ module Top (
 
 	input [`Match_bit-1 : 0] i_match,
 	input [`Match_bit-1 : 0] i_mismatch,
-	input [7:0] i_minusAlpha,
-	input [7:0] i_minusBeta,
-	input i_param_valid
+	input [`Alpha_Beta_Bit-1:0] i_minusAlpha,
+	input [`Alpha_Beta_Bit-1:0] i_minusBeta
 );
 
 //IO
@@ -42,7 +39,6 @@ reg [`PE_Array_size*2-1:0] _s;
 reg [`PE_Array_size_log : 0] _s_valid;
 reg [`Match_bit-1 : 0 ] _match, _mismatch;
 reg [7:0] _minusAlpha, _minusBeta;
-reg _param_valid;
 
 //controll
 localparam IDLE = 2'd0;
@@ -125,8 +121,8 @@ always @(*) begin
 	if(_param_valid & (state != CALC)) begin
 		n_post_match = _match;
 		n_post_mismatch = {{(`V_E_F_Bit - `Match_bit){1'd1}}, (~_mismatch + 1)};
-		n_post_alpha = {{(`V_E_F_Bit - 8){1'd1}}, (~_minusAlpha + 1)};
-		n_post_beta = {{(`V_E_F_Bit - 8){1'd1}}, (~_minusBeta + 1)};
+		n_post_alpha = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_minusAlpha + 1)};
+		n_post_beta  = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_minusBeta + 1)};
 
 	end else begin
 		n_post_match = post_match;
@@ -179,7 +175,6 @@ always @(posedge clk or negedge rst_n) begin
 		_mismatch <= i_mismatch;
 		_minusAlpha <= i_minusAlpha;
 		_minusBeta <= i_minusBeta;
-		_param_valid <= i_param_valid;
 
 		//param
 		post_match <= n_post_match;

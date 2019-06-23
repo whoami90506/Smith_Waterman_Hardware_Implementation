@@ -2,6 +2,9 @@
 `else
 `define UTIL
 
+//control
+//`define STANDARD_SRAM
+
 //parameter setting
 `define Alpha_Beta_Bit 8
 `define V_E_F_Bit 18 // 17 value + 1 signed
