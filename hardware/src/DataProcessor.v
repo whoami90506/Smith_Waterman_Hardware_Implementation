@@ -3,7 +3,6 @@
 `define DATA_PROCESSOR
 
 `include "src/SramController.v"
-`include "src/queue.v"
 `include "src/util.v"
 
 module DataProcessor (
@@ -31,7 +30,7 @@ module DataProcessor (
 	output reg [`V_E_F_Bit-1:0] o_v_a,
 	output reg [`V_E_F_Bit-1:0] o_f,
 	output reg o_t_newline,
-	output reg o_enable_0,
+	output reg o_t_enable_0,
 
 	input i_t_valid,
 	input [1:0] i_t,
@@ -308,4 +307,86 @@ always @(*) begin
 
 end
 endmodule
+
+always @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		//control
+		state <= IDLE;
+		o_busy <= 1'd0;
+
+		//s
+		s_mem <= {(`PE_Array_size*4){1'b0}};
+		s_num <= 0;
+		o_s_addr <= {`PE_Array_size_log{1'b1}};
+		s_no_more <= 1'b0;
+		o_request_s <= 1'b0;
+		o_s <= {(`PE_Array_size*2){1'b0}};
+		o_s_last <= 1'b0;
+
+		//t
+		t_counter <= {`Max_T_size_log{1'b1}};
+		o_t <= 2'd0;
+		o_v <= 0;
+		o_f <= 0;
+		o_v_a <= 0;
+		o_t_newline <= 1'd0;
+		o_t_enable_0 <= 1'd0;
+		o_lock <= 1'd1;
+
+		//sram
+		t_sram_mem <= {(`BIT_P_GROUP * `T_per_word *2){1'b1}};
+		t_sram_PE_num <= 4'd0;
+		o_send_data <= {(`Sram_Word){1'b1}};
+		o_sram_request <= 1'b0;
+		o_sram_send <= 1'b0;
+		t_store_num <= 3'd0;
+		t_store_counter <= 0;
+		o_sram_init <= 1'b0;
+
+		//cache
+		for(i = 0; i < 16; i = i +1)cache[i] <= {(`BIT_P_GROUP){1'b1}};
+		cache_read_addr <= 0;
+		cache_write_addr <= 0;
+
+	end else begin
+		//control
+		state <= n_state;
+		o_busy <= n_o_busy;
+
+		//s
+		s_mem <= n_s_mem;
+		s_num <= n_s_num;
+		o_s_addr <= n_o_s_addr;
+		s_no_more <= n_s_no_more;
+		o_request_s <= n_o_request_s;
+		o_s <= n_o_s;
+		o_s_last <= n_o_s_last;
+
+		//t
+		t_counter <= n_t_counter;
+		o_t   <= n_o_t;
+		o_v   <= n_o_v;
+		o_f   <= n_o_f;
+		o_v_a <= n_o_v_a;
+		o_t_newline  <= n_o_t_newline;
+		o_t_enable_0 <= n_o_t_enable_0;
+		o_lock <= n_o_lock;
+
+		//sram
+		t_sram_mem <= n_t_sram_mem;
+		t_sram_PE_num <= n_t_sram_PE_num;
+		o_send_data <= n_o_send_data;
+		o_sram_request <= n_o_sram_request;
+		o_sram_send <= n_o_sram_send;
+		t_store_num <= n_t_store_num;
+		t_store_counter <= n_t_store_counter;
+		o_sram_init <= n_o_sram_init;
+
+		//cache
+		for(i = 0; i < 16; i = i +1)cache[i] <= n_cache[i];
+		cache_read_addr <= n_cache_read_addr;
+		cache_write_addr <= n_cache_write_addr;
+	end
+end
+
 `endif//DATA_PROCESSOR

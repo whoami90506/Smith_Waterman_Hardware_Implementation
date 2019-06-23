@@ -2,6 +2,8 @@
 `else
 `define TOP
 
+`timescale 1 ns/1 ps
+
 `include "src/DataProcessor.v"
 `include "src/SramController.v"
 `include "src/PEArrayController.v"
