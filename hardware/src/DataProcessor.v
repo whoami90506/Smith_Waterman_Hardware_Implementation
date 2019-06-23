@@ -20,6 +20,7 @@ module DataProcessor (
 	//PEArrayController
 	output reg o_lock,
 	input i_init,
+	input i_finish,
 
 	output reg [`PE_Array_size*2-1:0] o_s,
 	output reg o_s_last,
@@ -128,6 +129,7 @@ always @(*) begin
 			n_state = (valid_w && (s_nxt_last_w || (o_s_addr == `PE_Array_size-2) ) ) ? SRAM_T : SRAM_ST;
 		end
 
+		//len(T) > 64
 		SRAM_T : begin
 			t_empty_w = (t_sram_PE_num == 0);
 			valid_w = (~t_empty_w);
@@ -136,6 +138,13 @@ always @(*) begin
 
 			if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : SRAM_ST;
 			else n_state = SRAM_T;
+		end
+
+		END : begin
+			t_empty_w = 1'b0;
+			valid_w   = 1'b0;
+
+			n_state = i_finish ? IDLE : END;
 		end
 	endcase
 end
@@ -151,6 +160,13 @@ always @(*) begin
 	n_o_s_last = o_s_last;
 
 	case (state)
+		IDLE : begin
+			n_s_num = 0;
+			n_o_s_addr = {`PE_Array_size_log{1'b1}};
+			n_s_no_more = 1'b0;
+			n_o_s_last = 1'b0;
+		end
+
 		SRAM_ST : begin
 			case ({valid_w, i_s_valid})
 				2'b11 : begin
@@ -194,17 +210,9 @@ always @(*) begin
 				n_o_request_s = (s_num < `PE_Array_size) && (~s_no_more);
 				n_o_s_last = s_nxt_last_w;
 			end
-		end
-	
-		//IDLE
-		default : begin
-			n_s_mem = {(`PE_Array_size*4){1'b0}};
-			n_s_num = 0;
-			n_o_s_addr = {`PE_Array_size_log{1'b1}};
-			n_s_no_more = 1'b0;
-			n_o_request_s = 1'b0;
-			n_o_s_last = 1'b0;
-		end
+		end //SRAM_T
+
+		//END need nothing
 	endcase
 end
 
@@ -260,6 +268,11 @@ always @(*) begin
 				end
 			end
 		end
+
+		END : begin
+			n_o_t_enable_0 = 1'b0;
+			n_cache_read_addr = 4'd0;
+		end
 	
 		//IDLE
 		default : begin
@@ -296,7 +309,7 @@ always @(*) begin
 			end
 		end
 	
-		//IDLE
+		//IDLE END
 		default : begin
 			n_t_store_num = 3'd0;
 			n_t_store_counter = 0;

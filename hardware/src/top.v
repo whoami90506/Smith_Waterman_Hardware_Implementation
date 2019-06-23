@@ -198,7 +198,7 @@ DataProcessor dp(.clk(clk), .rst_n(rst_n), .o_sram_request(dp_request_sram), .i_
 	.o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_v_a(v_a_dp_to_PE), .o_f(f_dp_to_PE), .o_t_newline(PE_newline), .o_enable_0(PE_enable_0), 
 	.i_t(t_PE_to_dp), .i_v(v_PE_to_dp), .i_f(f_PE_to_dp), .o_request_s(o_request_s), .i_s(_s), .i_s_valid(_s_valid), 
 	.i_t_valid(t_valid), .i_start_calc(start_cal), .o_busy(dp_busy), .o_s_addr(seq_s_addr), .i_minusA(post_alpha), 
-	.o_sram_init(sram_init));
+	.o_sram_init(sram_init), .i_finish(o_valid));
 
 PEArrayController PE(.clk(clk), .rst_n(rst_n), .i_match(post_match), .i_mismatch(post_mismatch), .i_minusAlpha(post_alpha), 
 	.i_minusBeta (post_beta), .i_start(start_cal), .o_result(o_result), .o_valid(o_valid), .i_s(seq_s), .i_s_last(seq_s_last), 
