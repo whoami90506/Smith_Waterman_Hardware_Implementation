@@ -2,7 +2,7 @@
 `define CYCLE    20.0           	        // Modify your clock period here
 `define TERMINATION  500000
 
-`include "src/FPGAWrapper.v"
+`include "src/FPGA/FPGAWrapper.v"
 
 module testfixture_fpga ();
 //control
