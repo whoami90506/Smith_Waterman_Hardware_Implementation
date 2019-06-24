@@ -38,25 +38,25 @@ initial begin
 	//set t
 	$display("[%t] start set t\n",$realtime() );
 	set_t = 1'b1;
-	@(negedge clk); set_t = 1'b0;
+	#(`CYCLE); set_t = 1'b0;
 	
-	wait(busy == 0);
+	#(`CYCLE);  wait(busy == 0);
 	$display("[%t] finish set t\n",$realtime() );
 
 	//start1
 	@(negedge clk); param = param_mem[0];
-	@(negedge clk); start = 1'b1;
+	#(`CYCLE); start = 1'b1;
 	$display("[%t] start first calculation\n",$realtime() );
-	@(negedge clk); start = 1'b0;
+	#(`CYCLE); start = 1'b0;
 
 	wait(valid); $display("[%t] result : %d\n",$realtime() , result);
 	wait(busy == 0); $display("[%t] finish first calculation\n",$realtime() );
 
 	//start2
 	@(negedge clk); param = param_mem[1];
-	@(negedge clk); start = 1'b1;
+	#(`CYCLE); start = 1'b1;
 	$display("[%t] start second calculation\n",$realtime() );
-	@(negedge clk); start = 1'b0;
+	#(`CYCLE); start = 1'b0;
 
 	wait(valid); $display("[%t] result : %d\n",$realtime() , result);
 	wait(busy == 0); $display("[%t] finish second calculation\n",$realtime() );

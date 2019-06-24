@@ -7,7 +7,7 @@
 `define DATA "dat/test0"
 
 //parameter setting
-`define Alpha_Beta_Bit 8
+`define Alpha_Beta_Bit 4
 `define V_E_F_Bit 18 // 17 value + 1 signed
 `define Match_bit  4 // 4 value
 
