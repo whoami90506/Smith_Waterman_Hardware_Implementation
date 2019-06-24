@@ -68,9 +68,10 @@ module myMax64 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 
 	genvar idx;
 	generate
-		for (idx = 0; idx < 8; idx = idx+1) 
+		for (idx = 0; idx < 8; idx = idx+1) begin : name
 			myMax8 #(.DATA_WIDTH(DATA_WIDTH)) layer1(.clk(clk), .rst_n(rst_n), 
 				.in(in[DATA_WIDTH*(idx+1)*8-1 : DATA_WIDTH*idx*8]), .result(middle[DATA_WIDTH*(idx+1)-1 : DATA_WIDTH*idx]), .init(init));
+		end
 	endgenerate
 
 	myMax8 layer2 (.clk(clk), .rst_n (rst_n), .in(middle), .result(result), .init(init));
