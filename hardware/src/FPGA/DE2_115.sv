@@ -136,7 +136,33 @@ module DE2_115(
 	output [16:0] HSMC_TX_D_P,
 	inout [6:0] EX_IO
 );
-logic RST_N;
+/****************
+	User
+*****************/
+logic CLOCK, RST_N;
+logic set_t, start;
+logic [3:0] match, mismatch, alpha, beta;
+logic [1:0] seven_state;
+
+assign CLOCK = CLOCK_50;
+assign RST_N = KEY[0];
+assign set_t = KEY[1];
+assign start = KEY[2];
+assign match = SW[17:14];
+assign mismatch = SW[13:10];
+assign alpha = SW[9:6];
+assign beta = SW[5:2];
+assign seven_state = SW[1:0];
+/***************
+	Moudle
+***************/
+//wrapper
+logic sw_busy, sw_valid;
+logic [17:0] sw_data;
+
+FPGAWrapper(.clk(CLOCK), .rst_n(RST_N), .i_set_t(set_t), .i_start_cal(start), .o_busy(sw_busy), .o_result(sw_data), .o_valid(sw_valid), 
+	.i_match(match), .i_mismatch(mismatch), .i_minusAlpha(alpha), .i_minusBeta(beta));
+
 
 
 endmodule

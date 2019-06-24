@@ -44,11 +44,9 @@ reg [`PE_Array_size_log : 0] s_data_valid, n_s_data_valid;
 integer file_s_len;
 
 initial begin
-	$readmemb($sformatf("%s_s.dat",`DATA),s_mem);
-	$readmemb($sformatf("%s_t.dat",`DATA),t_mem);
-	file_s_len = $fopen($sformatf("%s_s_len.dat",`DATA),"r");
-	while (!$feof(file_s_len)) $fscanf(file_s_len, "%d\n", s_total);
-	$fclose(file_s_len);
+	$readmemb(`DATA_s,s_mem);
+	$readmemb(`DATA_t,t_mem);
+	s_total = `DATA_TOTAL;
 end
 
 //s
