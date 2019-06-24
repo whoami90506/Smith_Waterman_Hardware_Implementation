@@ -20,8 +20,10 @@ module FPGAWrapper (
 	input [`Alpha_Beta_Bit-1:0] i_minusAlpha,
 	input [`Alpha_Beta_Bit-1:0] i_minusBeta
 );
+
 //control
 reg is_set_t, n_is_set_t;
+reg prev_press;
 
 //mem
 reg  [17:0] t_mem [0:1023];
@@ -76,7 +78,7 @@ end
 //t
 always @(*) begin
 	if(is_set_t) begin
-		n_is_set_t = o_busy;
+		n_is_set_t = o_busy | | prev_press;
 		n_t_addr = t_addr + 1;
 		n_t_data = t_mem[t_addr];
 	end else begin
@@ -88,6 +90,8 @@ end
 
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
+		//control
+		prev_press <= 1'b0;
 		//s
 		s_addr <= 0;
 		s_num  <= s_total;
@@ -99,6 +103,9 @@ always @(posedge clk or negedge rst_n) begin
 		t_addr <= 0;
 		t_data <= 0;
 	end else begin
+		//control
+		prev_press <= i_set_t;
+
 		//s
 		s_addr <= n_s_addr;
 		s_num  <= n_s_num;

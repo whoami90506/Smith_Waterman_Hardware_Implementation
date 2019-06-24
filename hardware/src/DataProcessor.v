@@ -102,7 +102,7 @@ task  TVF_to_group;
 endtask
 
 assign use_sram_w = (i_T_size > `DP_LIMIT);
-assign t_nxt_last_w = (t_counter-1 == i_T_size);
+assign t_nxt_last_w = (t_counter+2 == i_T_size);
 assign s_nxt_last_w = (s_num <= 1) && s_no_more;
 assign cache_empty_w = (cache_read_addr == cache_write_addr);
 assign s_empty_w = (s_num == 0) && (~s_no_more);
@@ -116,6 +116,7 @@ always @(*) begin
 		IDLE : begin
 			n_o_busy = i_start_calc;
 			t_empty_w = 1'b0;
+			valid_w = 1'b0;
 
 			if(i_start_calc) n_state = use_sram_w ? SRAM_ST : CACHE_INIT_ST;
 			else n_state = IDLE;
@@ -168,7 +169,7 @@ always @(*) begin
 		end
 
 		SRAM_ST : begin
-			case ({valid_w, i_s_valid})
+			case ({valid_w, (i_s_valid != 0)})
 				2'b11 : begin
 					n_o_s[2*(o_s_addr+1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
@@ -188,7 +189,7 @@ always @(*) begin
 				end
 				2'b01 : begin
 					n_s_mem[ (`PE_Array_size*2 - s_num)*2 -1 -: `PE_Array_size*2] = i_s;
-					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] : s_num + `PE_Array_size;
+					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log : 0] : s_num + `PE_Array_size;
 					n_s_no_more = (~i_s_valid) ? 1'b1 : 1'b0;
 					n_o_s_last = 1'b0;
 				end

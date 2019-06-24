@@ -144,6 +144,7 @@ always @(*) begin
 					n_isRequesting = 1'd0;
 					n_readAddr = {`Sram_Addr_log{1'd0}};
 					n_writeAddr = {`Sram_Addr_log{1'd0}};
+					n_o_busy = 1'd1;
 
 					if(i_t[17]) begin //i_start_read_t valid
 						if(i_t[16:14]) begin //last

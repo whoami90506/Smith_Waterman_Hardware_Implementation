@@ -36,36 +36,37 @@ initial begin
 	#(`CYCLE * 3.0); rst_n = 1'b1;
 
 	//set t
-	$display("[%t] start set t\n",$realtime() );
+	#(`CYCLE);
 	set_t = 1'b1;
+	$display("[%t] start set t",$realtime() );
 	#(`CYCLE); set_t = 1'b0;
 	
 	#(`CYCLE);  wait(busy == 0);
-	$display("[%t] finish set t\n",$realtime() );
+	$display("[%t] finish set t",$realtime() );
 
 	//start1
 	@(negedge clk); param = param_mem[0];
 	#(`CYCLE); start = 1'b1;
-	$display("[%t] start first calculation\n",$realtime() );
+	$display("[%t] start first calculation",$realtime() );
 	#(`CYCLE); start = 1'b0;
 
-	wait(valid); $display("[%t] result : %d\n",$realtime() , result);
-	wait(busy == 0); $display("[%t] finish first calculation\n",$realtime() );
+	wait(valid); $display("[%t] result : %d",$realtime() , result);
+	wait(busy == 0); $display("[%t] finish first calculation",$realtime() );
 
 	//start2
 	@(negedge clk); param = param_mem[1];
 	#(`CYCLE); start = 1'b1;
-	$display("[%t] start second calculation\n",$realtime() );
+	$display("[%t] start second calculation",$realtime() );
 	#(`CYCLE); start = 1'b0;
 
-	wait(valid); $display("[%t] result : %d\n",$realtime() , result);
-	wait(busy == 0); $display("[%t] finish second calculation\n",$realtime() );
+	wait(valid); $display("[%t] result : %d",$realtime() , result);
+	wait(busy == 0); $display("[%t] finish second calculation",$realtime() );
 
 	down = 1'b1;
 end
 
 initial begin
-	$timeformat(-9, 2, "ns", 20);
+	$timeformat(-9, 2, "ns", 15);
 
 	$fsdbDumpfile("sw_fpga.fsdb");
 	$fsdbDumpvars;
