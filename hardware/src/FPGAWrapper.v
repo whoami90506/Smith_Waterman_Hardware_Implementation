@@ -28,7 +28,7 @@ reg prev_press;
 //mem
 reg  [17:0] t_mem [0:1023];
 reg [127:0] s_mem [0: 255];
-reg  [14:0] s_total;
+reg  [15:0] s_total;
 
 reg   [9:0] t_addr, n_t_addr;
 reg   [7:0] s_addr, n_s_addr;

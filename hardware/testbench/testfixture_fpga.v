@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 `define CYCLE    20.0           	        // Modify your clock period here
-`define TERMINATION  50000
+`define TERMINATION  500000
 
 `include "src/FPGAWrapper.v"
 
