@@ -69,7 +69,7 @@ task SramRead;
 		n_CEN = 1'd0;
 		n_WEN = 1'd1;
 		n_A = addr;
-		n_D = D;
+		n_D = {(`Sram_Word){1'b0}};
 	end
 endtask
 
@@ -89,7 +89,7 @@ task SramNop;
 		n_CEN = 1'd1;
 		n_WEN = 1'd1;
 		n_A = A;
-		n_D = D;
+		n_D = {(`Sram_Word){1'b0}};
 	end
 endtask
 

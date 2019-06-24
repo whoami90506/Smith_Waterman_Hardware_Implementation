@@ -78,7 +78,7 @@ end
 //t
 always @(*) begin
 	if(is_set_t) begin
-		n_is_set_t = o_busy | | prev_press;
+		n_is_set_t = o_busy | prev_press;
 		n_t_addr = t_addr + 1;
 		n_t_data = t_mem[t_addr];
 	end else begin

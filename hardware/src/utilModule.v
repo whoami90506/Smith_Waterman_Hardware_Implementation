@@ -41,12 +41,14 @@ module myMax8 #(parameter DATA_WIDTH = `V_E_F_Bit) (
 	output reg [DATA_WIDTH-1 : 0] result,
 	input init
 );
-	wire [DATA_WIDTH-1 : 0] result1, result2, n_result;
+	wire [DATA_WIDTH-1 : 0] result1, result2, n_result, temp_result;
 	myMax4 #(.DATA_WIDTH(DATA_WIDTH)) m1(.a(in[DATA_WIDTH-1 : 0]), .b(in[DATA_WIDTH*2-1:DATA_WIDTH]),
 		.c(in[DATA_WIDTH*3-1 : DATA_WIDTH*2]), .d(in[DATA_WIDTH*4-1 : DATA_WIDTH*3]), .result(result1));
 	myMax4 #(.DATA_WIDTH(DATA_WIDTH)) m2(.a(in[DATA_WIDTH*5-1 : DATA_WIDTH*4]), .b(in[DATA_WIDTH*6-1:DATA_WIDTH*5]),
 		.c(in[DATA_WIDTH*7-1 : DATA_WIDTH*6]), .d(in[DATA_WIDTH*8-1 : DATA_WIDTH*7]), .result(result2));
-	myMax  #(.DATA_WIDTH(DATA_WIDTH)) mFinal(.a(result1), .b(result2), .result(n_result));
+	myMax  #(.DATA_WIDTH(DATA_WIDTH)) mFinal(.a(result1), .b(result2), .result(temp_result));
+
+	assign n_result = result > temp_result ? result : temp_result;
 
 	always @(posedge clk or negedge rst_n) begin
 		if(~rst_n) result <= {DATA_WIDTH{1'b0}};

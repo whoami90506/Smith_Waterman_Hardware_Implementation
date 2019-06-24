@@ -23,7 +23,7 @@ FPGAWrapper top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t),
 	.i_match(param[15:12]), .i_mismatch(param[11:8]), .i_minusAlpha(param[7:4]), .i_minusBeta(param[3:0]));
 
 initial begin
-	clk = 1'b0;
+	clk = 1'b1;
 	rst_n = 1'b1;
 	down = 1'b0;
 
@@ -66,7 +66,7 @@ initial begin
 end
 
 initial begin
-	$timeformat(-9, 2, "ns", 15);
+	$timeformat(-9, 2, " ns", 15);
 
 	$fsdbDumpfile("sw_fpga.fsdb");
 	$fsdbDumpvars;

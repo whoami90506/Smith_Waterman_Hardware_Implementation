@@ -58,6 +58,7 @@ localparam CACHE_ST      = 3'd5;
 localparam CACHE_T       = 3'd6;
 localparam END           = 3'd7;
 reg [2:0] state, n_state;
+reg need_init_sram, n_need_init_sram;
 reg n_o_busy;
 wire use_sram_w;
 wire t_nxt_last_w, s_nxt_last_w;
@@ -111,10 +112,12 @@ assign s_empty_w = (s_num == 0) && (~s_no_more);
 always @(*) begin
 	n_o_busy = 1'd1;
 	n_o_sram_init = 1'b0;
+	n_need_init_sram = need_init_sram;
 
 	case (state)
 		IDLE : begin
 			n_o_busy = i_start_calc;
+			n_need_init_sram = 1'b0;
 			t_empty_w = 1'b0;
 			valid_w = 1'b0;
 
@@ -135,7 +138,9 @@ always @(*) begin
 			t_empty_w = (t_sram_PE_num == 0);
 			valid_w = (~t_empty_w);
 
-			n_o_sram_init = valid_w & t_nxt_last_w & o_s_last;
+			n_o_sram_init = valid_w & t_nxt_last_w & o_s_last & need_init_sram;
+			if(need_init_sram)n_need_init_sram = 1'b1;
+			else n_need_init_sram = valid_w & t_nxt_last_w & (~o_s_last);
 
 			if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : SRAM_ST;
 			else n_state = SRAM_T;
@@ -146,6 +151,7 @@ always @(*) begin
 			valid_w   = 1'b0;
 
 			n_state = i_finish ? IDLE : END;
+			n_need_init_sram = 1'b0;
 		end
 	endcase
 end
@@ -171,7 +177,8 @@ always @(*) begin
 		SRAM_ST : begin
 			case ({valid_w, (i_s_valid != 0)})
 				2'b11 : begin
-					n_o_s[2*(o_s_addr+1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					if(o_s_addr != 6'd63) n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					else n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
 					n_s_mem[ (`PE_Array_size*2 - s_num +1)*2 -1 -: `PE_Array_size*2] = i_s;
 					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] -1 : s_num + `PE_Array_size -1;
@@ -180,7 +187,8 @@ always @(*) begin
 					n_o_s_last = 1'b0;
 				end
 				2'b10 : begin
-					n_o_s[2*(o_s_addr+1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					if(o_s_addr != 6'd63) n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					else n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
 					n_s_num = s_num -1;
 					n_o_s_addr = o_s_addr+1;
@@ -326,6 +334,7 @@ always @(posedge clk or negedge rst_n) begin
 		//control
 		state <= IDLE;
 		o_busy <= 1'd0;
+		need_init_sram <= 1'b0;
 
 		//s
 		s_mem <= {(`PE_Array_size*4){1'b0}};
@@ -365,6 +374,7 @@ always @(posedge clk or negedge rst_n) begin
 		//control
 		state <= n_state;
 		o_busy <= n_o_busy;
+		need_init_sram <= n_need_init_sram;
 
 		//s
 		s_mem <= n_s_mem;
