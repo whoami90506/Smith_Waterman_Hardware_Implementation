@@ -118,7 +118,7 @@ end
 
 //param
 always @(*) begin
-	if(_param_valid & (state != CALC)) begin
+	if(state != CALC) begin
 		n_post_match = _match;
 		n_post_mismatch = {{(`V_E_F_Bit - `Match_bit){1'd1}}, (~_mismatch + 1)};
 		n_post_alpha = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_minusAlpha + 1)};
@@ -150,7 +150,6 @@ always @(posedge clk or negedge rst_n) begin
 		_mismatch <= 0;
 		_minusAlpha <= 0;
 		_minusBeta <= 0;
-		_param_valid <= 1'd0;
 
 		//param
 		post_match <= 6;
@@ -190,7 +189,7 @@ SramController mem(.clk(clk), .rst_n(rst_n), .i_PE_request(dp_request_sram), .o_
 
 DataProcessor dp(.clk(clk), .rst_n(rst_n), .o_sram_request(dp_request_sram), .i_request_data(data_sram_to_dp), .o_sram_send(dp_store_sram), 
 	.o_send_data(data_dp_to_sram), .i_T_size(t_size), .o_lock(PE_lock), .i_init(o_valid), .o_s(seq_s), .o_s_last(seq_s_last), 
-	.o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_v_a(v_a_dp_to_PE), .o_f(f_dp_to_PE), .o_t_newline(PE_newline), .o_enable_0(PE_enable_0), 
+	.o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_v_a(v_a_dp_to_PE), .o_f(f_dp_to_PE), .o_t_newline(PE_newline), .o_t_enable_0(PE_enable_0), 
 	.i_t(t_PE_to_dp), .i_v(v_PE_to_dp), .i_f(f_PE_to_dp), .o_request_s(o_request_s), .i_s(_s), .i_s_valid(_s_valid), 
 	.i_t_valid(t_valid), .i_start_calc(start_cal), .o_busy(dp_busy), .o_s_addr(seq_s_addr), .i_minusA(post_alpha), 
 	.o_sram_init(sram_init), .i_finish(o_valid));

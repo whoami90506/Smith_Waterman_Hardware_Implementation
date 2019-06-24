@@ -319,7 +319,6 @@ always @(*) begin
 	endcase
 
 end
-endmodule
 
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
@@ -401,5 +400,5 @@ always @(posedge clk or negedge rst_n) begin
 		cache_write_addr <= n_cache_write_addr;
 	end
 end
-
+endmodule
 `endif//DATA_PROCESSOR

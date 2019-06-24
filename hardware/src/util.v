@@ -4,6 +4,7 @@
 
 //control
 //`define STANDARD_SRAM
+`define DATA "dat/TA"
 
 //parameter setting
 `define Alpha_Beta_Bit 8

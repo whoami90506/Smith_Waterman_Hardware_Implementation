@@ -24,6 +24,10 @@ with open(args.i, 'r') as file_in :
 			f.write(table[x])
 			idx += 1
 			if idx % 64 == 0 : f.write('\n')
+
+		while idx % 64 != 0 :
+			f.write('xx')
+			idx += 1
 	
 	with open(args.o + '_s_len.dat', 'w') as f : f.write(str(len(s)) + '\n')
 
