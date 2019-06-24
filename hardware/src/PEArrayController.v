@@ -111,7 +111,7 @@ always @(*) begin
 			n_o_t_valid = t_valid_buf && (s_using == `PE_Array_size-1);
 
 			if(~i_lock) begin
-				for(i = 1; i < `PE_Array_size-1; i = i+1)n_PE_enable[i] = PE_enable_all[i] ? PE_enable[i] : 1'b0;
+				for(i = 0; i < `PE_Array_size-1; i = i+1)n_PE_enable[i] = PE_enable_all[i] ? PE_enable[i] : 1'b0;
 				n_PE_enable[i_s_addr] = i_s_last | ~PE_enable_all[i_s_addr] ? 1'b0 : PE_enable[i_s_addr]; 
 			end
 		end
