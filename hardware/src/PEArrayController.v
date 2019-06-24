@@ -49,8 +49,8 @@ reg n_o_valid;
 reg t_valid_buf;
 wire n_t_valid_buf;
 reg n_o_t_valid;
-wire [1:0] n_o_t;
-wire [`V_E_F_Bit-1 : 0] n_o_v, n_o_f;
+reg [1:0] n_o_t;
+reg [`V_E_F_Bit-1 : 0] n_o_v, n_o_f;
 
 //control
 localparam IDLE = 2'd0;
@@ -62,6 +62,7 @@ reg [`PE_Array_size_log-1 : 0] s_using, n_s_using;
 
 //PE 
 reg [ `PE_Array_size-2 : 0] PE_enable, n_PE_enable;
+reg PE_last_enable_post_buf;
 wire [`PE_Array_size-1 : 0] PE_enable_all;
 wire [ `PE_Array_size-1 : 0] PE_newline;
 wire [1:0] PE_t [0 : `PE_Array_size-1];
@@ -74,9 +75,6 @@ wire [`V_E_F_Bit * `PE_Array_size -1 : 0] PE_v_1D;
 
 //assign
 assign n_t_valid_buf = ~i_lock;
-assign n_o_t = PE_t[s_using];
-assign n_o_v = PE_v[s_using];
-assign n_o_f = PE_f[s_using];
 assign PE_enable_all[0] = i_enable_0;
 assign PE_enable_all[`PE_Array_size-1 : 1] = PE_enable;
 generate
@@ -89,6 +87,9 @@ always @(*) begin
 	n_PE_enable = PE_enable;
 	n_o_valid = 1'b0;
 	n_o_t_valid = 1'b0;
+	n_o_t = PE_t[`PE_Array_size-1];
+	n_o_v = PE_v[`PE_Array_size-1];
+	n_o_f = PE_f[`PE_Array_size-1];
 
 	case (state)
 		IDLE : begin
@@ -108,7 +109,7 @@ always @(*) begin
 		CALC :begin
 			n_state = (PE_enable_all == {`PE_Array_size{1'b0}})  ? END : CALC;
 			n_s_using = i_s_last ? i_s_addr : s_using;
-			n_o_t_valid = t_valid_buf && (s_using == `PE_Array_size-1);
+			n_o_t_valid = t_valid_buf & PE_last_enable_post_buf;
 
 			if(~i_lock) begin
 				for(i = 0; i < `PE_Array_size-1; i = i+1)n_PE_enable[i] = PE_enable_all[i] ? PE_enable[i] : 1'b0;
@@ -142,6 +143,7 @@ always @(posedge clk or negedge rst_n) begin
 
 		//PE
 		PE_enable <= {(`PE_Array_size-1){1'b0}};
+		PE_last_enable_post_buf <= 1'b0;
 	end else begin
 		//control
 		state <= n_state;
@@ -157,6 +159,7 @@ always @(posedge clk or negedge rst_n) begin
 
 		//PE
 		PE_enable <= n_PE_enable;
+		PE_last_enable_post_buf <= PE_enable_all[`PE_Array_size-1];
 	end
 end
 

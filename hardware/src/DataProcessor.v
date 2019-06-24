@@ -97,11 +97,6 @@ reg [3:0] cache_read_addr, n_cache_read_addr;
 reg [3:0] cache_write_addr, n_cache_write_addr;
 wire cache_empty_w;
 
-task  TVF_to_group;
-	output [`BIT_P_GROUP-1 : 0] result;
-	result = {i_t, i_v[`V_E_F_Bit-2 : 0], i_f[`V_E_F_Bit-2 : 0]};
-endtask
-
 assign use_sram_w = (i_T_size > `DP_LIMIT);
 assign t_nxt_last_w = (t_counter+2 == i_T_size);
 assign s_nxt_last_w = (s_num <= 1) && s_no_more;
@@ -140,7 +135,7 @@ always @(*) begin
 
 			n_o_sram_init = valid_w & t_nxt_last_w & o_s_last & need_init_sram;
 			if(need_init_sram)n_need_init_sram = 1'b1;
-			else n_need_init_sram = valid_w & t_nxt_last_w & (~o_s_last);
+			else n_need_init_sram = valid_w & t_nxt_last_w;
 
 			if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : SRAM_ST;
 			else n_state = SRAM_T;
@@ -245,12 +240,12 @@ always @(*) begin
 	case (state)
 		SRAM_ST, SRAM_T : begin
 			if(valid_w) begin
-				n_t_counter = (t_counter >= i_T_size) ? 0 : t_counter +1;
+				n_t_counter = (t_counter >= i_T_size -1) ? 0 : t_counter +1;
 				n_o_t   = t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -1 -: 2];
 				n_o_v   = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -3 -: `V_E_F_Bit-1]};
 				n_o_v_a = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -3 -: `V_E_F_Bit-1]} + i_minusA;
 				n_o_f   = {1'b0, t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 - `V_E_F_Bit -2 -: `V_E_F_Bit-1]};
-				n_o_t_newline = (t_counter >= i_T_size);
+				n_o_t_newline = (t_counter +1 >= i_T_size);
 
 				n_t_sram_mem = t_sram_mem << `BIT_P_GROUP;
 				n_t_sram_PE_num = t_sram_PE_num - 4'd1;
@@ -311,7 +306,7 @@ always @(*) begin
 	case (state)
 		SRAM_ST, SRAM_T : begin
 			if(i_t_valid) begin
-				TVF_to_group(n_o_send_data[`BIT_P_GROUP * (`T_per_word - t_store_num) -: `BIT_P_GROUP]);
+				n_o_send_data[(`BIT_P_GROUP * (`T_per_word - t_store_num))-1 -: `BIT_P_GROUP] = {i_t, i_v[`V_E_F_Bit-2 : 0], i_f[`V_E_F_Bit-2 : 0]};
 				n_o_sram_send = (t_store_num == `T_per_word -1 || t_store_counter == i_T_size -1);
 				n_t_store_counter = (t_store_counter == i_T_size -1) ? 0 : t_store_counter + 1;
 				n_t_store_num = (t_store_num == `T_per_word -1 || t_store_counter == i_T_size -1) ? 3'd0 : t_store_num + 3'd1;
