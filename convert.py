@@ -26,7 +26,7 @@ with open(args.i, 'r') as file_in :
 			if idx % 64 == 0 : f.write('\n')
 
 		while idx % 64 != 0 :
-			f.write('xx')
+			f.write('00')
 			idx += 1
 	
 	with open(args.o + '_s_len.dat', 'w') as f : f.write(str(len(s)) + '\n')
@@ -44,7 +44,7 @@ with open(args.i, 'r') as file_in :
 
 			for i in range(7) :
 				if idx+i < len(t) : f.write(table[t[idx+i]])
-				else : f.write('xx')
+				else : f.write('00')
 
 			f.write('\n')
 			idx += 7

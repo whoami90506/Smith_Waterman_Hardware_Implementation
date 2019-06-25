@@ -150,7 +150,6 @@ logic set_t, start;
 logic [3:0] match, mismatch, alpha, beta;
 logic [1:0] seven_state;
 
-assign CLOCK = CLOCK_50;
 assign RST_N = KEY[0];
 assign set_t = ~KEY[1];
 assign start = ~KEY[2];
@@ -159,6 +158,13 @@ assign mismatch = SW[13:10];
 assign alpha = SW[9:6];
 assign beta = SW[5:2];
 assign seven_state = SW[1:0];
+/***************
+	System
+***************/
+logic CLOCK_30;
+altpll altpll(.clk_clk(CLOCK_50), .reset_reset_n(RST_N), .clock_30_clk (CLOCK_30));
+assign CLOCK = CLOCK_30;
+
 
 /***************
 	Moudle
@@ -204,9 +210,9 @@ end
 FPGAWrapper fw(.clk(CLOCK), .rst_n(RST_N), .i_set_t(set_t), .i_start_cal(start), .o_busy(sw_busy), .o_result(sw_data), .o_valid(sw_valid), 
 	.i_match(match), .i_mismatch(mismatch), .i_minusAlpha(alpha), .i_minusBeta(beta));
 
-NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data({9'd0, data}), .o_seven(score_decode));
-timer ans(.clk(CLOCK), .rst_n(RST_N), .i_start(start), .i_end(sw_valid), .o_seven(ans_timer));
-timer busy(.clk(CLOCK), .rst_n(RST_N), .i_start(sw_busy), .i_end(~sw_busy), .o_seven(busy_timer));
+//NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data({9'd0, data}), .o_seven(score_decode));
+//timer ans(.clk(CLOCK), .rst_n(RST_N), .i_start(start), .i_end(sw_valid), .o_seven(ans_timer));
+//timer busy(.clk(CLOCK), .rst_n(RST_N), .i_start(sw_busy), .i_end(~sw_busy), .o_seven(busy_timer));
 
 SevenHexDecoder s0(.i_data(seven[ 3: 0]), .o_seven(HEX0));
 SevenHexDecoder s1(.i_data(seven[ 7: 4]), .o_seven(HEX1));
