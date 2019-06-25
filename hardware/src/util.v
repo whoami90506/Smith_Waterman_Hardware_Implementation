@@ -4,7 +4,7 @@
 
 //control
 //`define STANDARD_SRAM
-`define DATA "dat/test16384x7168"
+`define DATA "dat/test512x512"
 
 //parameter setting
 `define Alpha_Beta_Bit 4

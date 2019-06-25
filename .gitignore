@@ -6,3 +6,4 @@ db/
 incremental_db/
 .vscode/
 *.qws
+*~*.xlsx
