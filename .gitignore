@@ -1,3 +1,8 @@
 sftp-config*
 hardware/Memory
 .vscode
+db/
+.qsys_edit/
+incremental_db/
+.vscode/
+*.qws
