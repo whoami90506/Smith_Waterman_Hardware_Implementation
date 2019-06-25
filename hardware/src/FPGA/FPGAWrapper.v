@@ -46,7 +46,7 @@ integer file_s_len;
 initial begin
 	$readmemb(`DATA_s,s_mem);
 	$readmemb(`DATA_t,t_mem);
-	s_total = `DATA_TOTAL;
+	s_total = `DATA_S_TOTAL;
 end
 
 //s

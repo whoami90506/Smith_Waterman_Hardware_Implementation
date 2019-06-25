@@ -4,10 +4,11 @@
 
 //control
 //`define STANDARD_SRAM
-`define DATA_s "dat/test16384x7168_s.dat"
-`define DATA_t "dat/test16384x7168_t.dat"
+`define DATA       "dat/test16384x7168"
+`define DATA_s     "dat/test16384x7168_s.dat"
+`define DATA_t     "dat/test16384x7168_t.dat"
 `define DATA_s_len "dat/test16384x7168_s_len.dat"
-`define DATA_TOTAL 7168
+`define DATA_S_TOTAL 16384
 
 //parameter setting
 `define Alpha_Beta_Bit 4

@@ -1,3 +1,7 @@
+`ifdef SEVNEHEXDECODER 
+`else 
+`define SEVNEHEXDECODER
+
 module SevenHexDecoder(
   input [3:0] i_data, // SRAM address
   output logic [6:0] o_seven
@@ -42,3 +46,5 @@ always_comb begin
 	endcase
 end
 endmodule
+
+`endif

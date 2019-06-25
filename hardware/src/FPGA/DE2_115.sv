@@ -1,3 +1,9 @@
+`include "src/FPGA/Debounce.sv"
+`include "src/FPGA/FPGAWrapper.v"
+`include "src/FPGA/NumberDecoder.sv"
+`include "src/FPGA/SevenHexDecoder.sv"
+`include "src/FPGA/timer.sv"
+
 module DE2_115(
 	input CLOCK_50,
 	input CLOCK2_50,
@@ -162,7 +168,7 @@ logic sw_busy, sw_valid;
 logic [17:0] sw_data;
 
 //score
-logic [31:0] score_decode;
+logic [31:0] score_decode, ans_timer, busy_timer;
 
 logic [17:0] data, n_data;
 logic is_set, n_is_set;
@@ -171,11 +177,19 @@ logic [31:0] seven;
 assign LEDR = data;
 assign LEDG[8] = sw_busy;
 assign LEDG[0] = is_set;
-assign seven = score_decode;
 
 assign n_data = sw_valid ? sw_data : data;
 assign n_is_set = is_set ? 1'b1 : set_t;
 
+always_comb begin
+	case (seven_state)
+		2'b00 : seven = score_decode;
+		2'b01 : seven = ans_timer;
+		2'b10 : seven = busy_timer;
+		2'b11 : seven = 32'd0;
+	endcase
+
+end
 
 always_ff @(posedge CLOCK or negedge RST_N) begin
 	if(~RST_N) begin
@@ -190,7 +204,10 @@ end
 FPGAWrapper fw(.clk(CLOCK), .rst_n(RST_N), .i_set_t(set_t), .i_start_cal(start), .o_busy(sw_busy), .o_result(sw_data), .o_valid(sw_valid), 
 	.i_match(match), .i_mismatch(mismatch), .i_minusAlpha(alpha), .i_minusBeta(beta));
 
-NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data(data), .o_seven(score_decode));
+NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data({9'd0, data}), .o_seven(score_decode));
+timer ans(.clk(CLOCK), .rst_n(RST_N), .i_start(start), .i_end(sw_valid), .o_seven(ans_timer));
+timer busy(.clk(CLOCK), .rst_n(RST_N), .i_start(sw_busy), .i_end(~sw_busy), .o_seven(busy_timer));
+
 SevenHexDecoder s0(.i_data(seven[ 3: 0]), .o_seven(HEX0));
 SevenHexDecoder s1(.i_data(seven[ 7: 4]), .o_seven(HEX1));
 SevenHexDecoder s2(.i_data(seven[11: 8]), .o_seven(HEX2));

@@ -1,8 +1,12 @@
+`ifdef NUMBERDECODER 
+`else 
+`define NUMBERDECODER
+
 module NumberDecoder(
     input clk, 
     input rst_n,
 
-    input [17:0] i_data,
+    input [26:0] i_data,
     output logic [31:0] o_seven
 );
 integer i;
@@ -10,8 +14,8 @@ genvar idx;
 
 logic [31:0] n_o_seven;
 
-logic [17:0] temp [0:6];
-logic [17:0] n_temp [0:6];
+logic [26:0] temp [0:6];
+logic [26:0] n_temp [0:6];
 
 assign n_o_seven[3:0] = i_data % 10;
 assign n_temp[0] = (i_data - o_seven[3:0])/10;
@@ -30,7 +34,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		o_seven <= 32'd0;
 		for(i = 0; i < 7; i = i+1) begin 
-			temp[i] <= 18'd0;
+			temp[i] <= 27'd0;
 		end
 	end else begin
 		o_seven <= n_o_seven;
@@ -40,3 +44,5 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end
 end
 endmodule
+
+`endif
