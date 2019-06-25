@@ -6,7 +6,7 @@
 using namespace std;
 
 //#define TRACE
-//#define DEBUG_PRINTMATRIX
+#define DEBUG_PRINTMATRIX
 
 float alpha, beta, _match, _mismatch;
 bool firstRead = true;
