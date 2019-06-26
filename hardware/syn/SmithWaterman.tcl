@@ -33,7 +33,7 @@ change_names -hierarchy -rules name_rule
 
 write -format ddc     -hierarchy -output "syn/SmithWaterman_syn.ddc"
 write -format verilog -hierarchy -output "syn/SmithWaterman_syn.v"
-write_sdf -version 2.1 -context verilog SmithWaterman_syn.sdf
+write_sdf -version 2.1 -context verilog syn/SmithWaterman_syn.sdf
 #write_sdc core_syn.sdc
 report_timing > syn/timing.report
 report_area > syn/area.report

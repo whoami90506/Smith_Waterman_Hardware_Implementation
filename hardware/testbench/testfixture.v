@@ -4,6 +4,11 @@
 
 `include "src/util.v"
 
+`ifdef SYN
+	`define SDF
+	`define SDFFILE "syn/SmithWaterman_syn.sdf"
+`endif
+
 module testfixture_fpga ();
 //control
 reg clk, rst_n;
@@ -32,8 +37,8 @@ reg  [14:0] s_num,  n_s_num;
 reg  [17:0] t_data, n_t_data;
 reg [127:0] s_data, n_s_data;
 
-SmithWaterman top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start), .o_busy(busy), .o_result(result), 
-	.o_valid(valid), .o_request_s (top_request_s), .i_t(t_data), .i_s(s_data), .i_s_valid(s_data_valid), 
+SmithWaterman u_SmithWaterman(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start), .o_busy(busy), 
+	.o_result(result), .o_valid(valid), .o_request_s (top_request_s), .i_t(t_data), .i_s(s_data), .i_s_valid(s_data_valid), 
 	.i_match(param[15:12]), .i_mismatch(param[11:8]), .i_minusAlpha(param[7:4]), .i_minusBeta(param[3:0]));
 
 initial begin
@@ -153,6 +158,10 @@ initial begin
 	$fsdbDumpfile("sw_fpga.fsdb");
 	$fsdbDumpvars;
 	$fsdbDumpMDA;
+
+	`ifdef SDF
+	$sdf_annotate(`SDFFILE, u_SmithWaterman);
+	`endif
 	
 	$readmemh($sformatf("%s_param.dat", `DATA), param_mem);
 	$readmemb(`DATA_s,s_mem);
