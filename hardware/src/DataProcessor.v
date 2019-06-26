@@ -176,7 +176,7 @@ always @(*) begin
 					else n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
 					n_s_mem[ (`PE_Array_size*2 - s_num +1)*2 -1 -: `PE_Array_size*2] = i_s;
-					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] -1 : s_num + `PE_Array_size -1;
+					n_s_num = (~i_s_valid) ? s_num + i_s_valid -1 : s_num + `PE_Array_size -1;
 					n_o_s_addr = o_s_addr+1;
 					n_s_no_more = (~i_s_valid) ? 1'b1 : 1'b0;
 					n_o_s_last = 1'b0;
@@ -192,7 +192,7 @@ always @(*) begin
 				end
 				2'b01 : begin
 					n_s_mem[ (`PE_Array_size*2 - s_num)*2 -1 -: `PE_Array_size*2] = i_s;
-					n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log : 0] : s_num + `PE_Array_size;
+					n_s_num = (~i_s_valid) ? s_num + i_s_valid : s_num + `PE_Array_size;
 					n_s_no_more = (~i_s_valid) ? 1'b1 : 1'b0;
 					n_o_s_last = 1'b0;
 				end
