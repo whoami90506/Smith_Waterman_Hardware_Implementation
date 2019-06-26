@@ -38,7 +38,7 @@ reg [17:0] _t;
 reg [`PE_Array_size*2-1:0] _s;
 reg [`PE_Array_size_log : 0] _s_valid;
 reg [`Match_bit-1 : 0 ] _match, _mismatch;
-reg [7:0] _minusAlpha, _minusBeta;
+reg [`Alpha_Beta_Bit-1:0] _minusAlpha, _minusBeta;
 
 //controll
 localparam IDLE = 2'd0;
