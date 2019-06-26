@@ -163,7 +163,7 @@ assign seven_state = SW[1:0];
 ***************/
 logic CLOCK_30;
 altpll altpll(.clk_clk(CLOCK_50), .reset_reset_n(RST_N), .clock_30_clk (CLOCK_30));
-assign CLOCK = CLOCK_30;
+assign CLOCK = CLOCK_50;
 
 
 /***************
@@ -174,28 +174,48 @@ logic sw_busy, sw_valid;
 logic [17:0] sw_data;
 
 //score
-logic [31:0] score_decode, ans_timer, busy_timer;
+logic [25:0] ans_timer, busy_timer;
 
 logic [17:0] data, n_data;
 logic is_set, n_is_set;
 logic [31:0] seven;
 
-assign LEDR = data;
 assign LEDG[8] = sw_busy;
-assign LEDG[0] = is_set;
 
 assign n_data = sw_valid ? sw_data : data;
 assign n_is_set = is_set ? 1'b1 : set_t;
 
 always_comb begin
 	case (seven_state)
-		2'b00 : seven = score_decode;
-		2'b01 : seven = ans_timer;
-		2'b10 : seven = busy_timer;
-		2'b11 : seven = 32'd0;
+		2'b00 : begin
+			LEDG[7:0] = data[7:0];
+			LEDR = data[17:8];
+		end
+		2'b10 : begin
+			LEDG[7:0] = ans_timer[7:0];
+			LEDR = ans_timer[25:8];
+		end
+		2'b11 : begin
+			LEDG[7:0] = busy_timer[7:0];
+			LEDR = busy_timer[25:8];
+		end
+		default : begin
+			LEDG[7:0] = 8'hff;
+			LEDR = 18'h3ffff;
+		end
 	endcase
 
 end
+
+// always_comb begin
+// 	case (seven_state)
+// 		2'b00 : seven = score_decode;
+// 		2'b01 : seven = ans_timer;
+// 		2'b10 : seven = busy_timer;
+// 		2'b11 : seven = 32'd0;
+// 	endcase
+
+// end
 
 always_ff @(posedge CLOCK or negedge RST_N) begin
 	if(~RST_N) begin
@@ -210,17 +230,17 @@ end
 FPGAWrapper fw(.clk(CLOCK), .rst_n(RST_N), .i_set_t(set_t), .i_start_cal(start), .o_busy(sw_busy), .o_result(sw_data), .o_valid(sw_valid), 
 	.i_match(match), .i_mismatch(mismatch), .i_minusAlpha(alpha), .i_minusBeta(beta));
 
-//NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data({9'd0, data}), .o_seven(score_decode));
-//timer ans(.clk(CLOCK), .rst_n(RST_N), .i_start(start), .i_end(sw_valid), .o_seven(ans_timer));
-//timer busy(.clk(CLOCK), .rst_n(RST_N), .i_start(sw_busy), .i_end(~sw_busy), .o_seven(busy_timer));
+// NumberDecoder nd(.clk(CLOCK), .rst_n(RST_N), .i_data({9'd0, data}), .o_seven(score_decode));
+timer ans(.clk(CLOCK), .rst_n(RST_N), .i_start(start), .i_end(sw_valid), .o_time(ans_timer));
+timer busy(.clk(CLOCK), .rst_n(RST_N), .i_start(sw_busy), .i_end(~sw_busy), .o_time(busy_timer));
 
-SevenHexDecoder s0(.i_data(seven[ 3: 0]), .o_seven(HEX0));
-SevenHexDecoder s1(.i_data(seven[ 7: 4]), .o_seven(HEX1));
-SevenHexDecoder s2(.i_data(seven[11: 8]), .o_seven(HEX2));
-SevenHexDecoder s3(.i_data(seven[15:12]), .o_seven(HEX3));
-SevenHexDecoder s4(.i_data(seven[19:16]), .o_seven(HEX4));
-SevenHexDecoder s5(.i_data(seven[23:20]), .o_seven(HEX5));
-SevenHexDecoder s6(.i_data(seven[27:24]), .o_seven(HEX6));
-SevenHexDecoder s7(.i_data(seven[31:28]), .o_seven(HEX7));
+// SevenHexDecoder s0(.i_data(seven[ 3: 0]), .o_seven(HEX0));
+// SevenHexDecoder s1(.i_data(seven[ 7: 4]), .o_seven(HEX1));
+// SevenHexDecoder s2(.i_data(seven[11: 8]), .o_seven(HEX2));
+// SevenHexDecoder s3(.i_data(seven[15:12]), .o_seven(HEX3));
+// SevenHexDecoder s4(.i_data(seven[19:16]), .o_seven(HEX4));
+// SevenHexDecoder s5(.i_data(seven[23:20]), .o_seven(HEX5));
+// SevenHexDecoder s6(.i_data(seven[27:24]), .o_seven(HEX6));
+// SevenHexDecoder s7(.i_data(seven[31:28]), .o_seven(HEX7));
 
 endmodule

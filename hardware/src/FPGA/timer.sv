@@ -11,13 +11,14 @@ module timer(
 	input i_start,
 	input i_end,
 
-	output [31:0] o_seven
+	output [25:0] o_time
 );
 
 logic run, n_run;
 logic [26:0] counter, n_counter;
+assign o_time = counter[25:0];
 
-NumberDecoder nd(.clk(clk), .rst_n(rst_n), .i_data(counter), .o_seven(o_seven));
+//NumberDecoder nd(.clk(clk), .rst_n(rst_n), .i_data(counter), .o_seven(o_seven));
 
 always_comb begin
 	if(run) begin
