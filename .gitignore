@@ -7,3 +7,6 @@ incremental_db/
 .vscode/
 *.qws
 *.~lock*.xlsx#
+*~*.pptx
+*~*.xlsx
+*tsmc13_neg.v
