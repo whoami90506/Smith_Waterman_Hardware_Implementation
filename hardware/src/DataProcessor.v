@@ -148,6 +148,13 @@ always @(*) begin
 			n_state = i_finish ? IDLE : END;
 			n_need_init_sram = 1'b0;
 		end
+
+		default : begin
+			t_empty_w = 1'b1;
+			valid_w = 1'b0;
+
+			n_state = IDLE;
+		end
 	endcase
 end
 

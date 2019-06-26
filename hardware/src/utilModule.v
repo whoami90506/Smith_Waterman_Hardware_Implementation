@@ -93,7 +93,7 @@ reg [WIDTH-1:0] data [0:DEPTH-1];
 wire INVALIDA = AA >= DEPTH;
 
 always@(posedge CLKA) begin
-    QA <= ~CENA & WENA & ~INVALIDA ? data[AA] : 128'dz;
+    QA <= ~CENA & WENA & ~INVALIDA ? data[AA] : 128'd0;
     if(~WENA & ~CENA & ~INVALIDA) begin
         data[AA] <= DA;
     end
