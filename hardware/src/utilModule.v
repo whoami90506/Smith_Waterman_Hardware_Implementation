@@ -7,7 +7,7 @@ module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	input  [DATA_WIDTH-1 : 0 ] b,
 	output [DATA_WIDTH-1 : 0 ] result
 );
-	wire compare, apbp, apbn, anbn;
+	wire compare, apbp, apbn, anbn, chooseA;
 	assign compare = (a[DATA_WIDTH-2:0] >= b[DATA_WIDTH -2:0] );
 	assign apbp = (~a[DATA_WIDTH -1]) & (~b[DATA_WIDTH -1]);
 	assign apbn = (~a[DATA_WIDTH -1]) & ( b[DATA_WIDTH -1]);
