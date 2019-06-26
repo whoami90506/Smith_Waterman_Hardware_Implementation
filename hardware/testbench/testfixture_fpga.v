@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 `define CYCLE    20.0           	        // Modify your clock period here
-`define TERMINATION  500000
+`define TERMINATION  50000000
 
 `include "src/FPGA/FPGAWrapper.v"
 
@@ -66,7 +66,7 @@ initial begin
 end
 
 initial begin
-	$timeformat(-9, 2, " ns", 15);
+	$timeformat(-9, 2, " ns", 17);
 
 	$fsdbDumpfile("sw_fpga.fsdb");
 	$fsdbDumpvars;
