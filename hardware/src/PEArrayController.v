@@ -78,7 +78,9 @@ assign n_t_valid_buf = ~i_lock;
 assign PE_enable_all[0] = i_enable_0;
 assign PE_enable_all[`PE_Array_size-1 : 1] = PE_enable;
 generate
-	for(idx = 0; idx < `PE_Array_size; idx = idx+1) assign PE_v_1D[`V_E_F_Bit * idx +: `V_E_F_Bit] = PE_v[idx];
+	for(idx = 0; idx < `PE_Array_size; idx = idx+1) begin : name
+		assign PE_v_1D[`V_E_F_Bit * idx +: `V_E_F_Bit] = PE_v[idx];
+	end
 endgenerate
 
 always @(*) begin
@@ -112,7 +114,9 @@ always @(*) begin
 			n_o_t_valid = t_valid_buf & PE_last_enable_post_buf;
 
 			if(~i_lock) begin
-				for(i = 0; i < `PE_Array_size-1; i = i+1)n_PE_enable[i] = PE_enable_all[i] ? PE_enable[i] : 1'b0;
+				for(i = 0; i < `PE_Array_size-1; i = i+1) begin : name2
+					n_PE_enable[i] = PE_enable_all[i] ? PE_enable[i] : 1'b0;
+				end
 				n_PE_enable[i_s_addr] = i_s_last | ~PE_enable_all[i_s_addr] ? 1'b0 : PE_enable[i_s_addr]; 
 			end
 		end
@@ -169,10 +173,12 @@ PE PE_cell_first(.clk(clk), .rst(rst_n), .enable(i_enable_0), .lock(i_lock), .ne
 	.fOut(PE_f[0]));
 
 generate
-	for(idx = 0; idx < `PE_Array_size-1; idx = idx+1) PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), .lock(i_lock), 
+	for(idx = 0; idx < `PE_Array_size-1; idx = idx+1) begin : name1
+		PE PE_cell(.clk(clk), .rst(rst_n), .enable(PE_enable[idx]), .lock(i_lock), 
 		.newLineIn (PE_newline[idx]), .newLineOut(PE_newline[idx+1]), .s(i_s[2*(idx+1) +: 2]), .tIn(PE_t[idx]), 
 		.tOut(PE_t[idx+1]), .minusAlpha(i_minusAlpha), .minusBeta(i_minusBeta), .mismatch(i_mismatch), .match(i_match), 
 		.vIn(PE_v[idx]), .vIn_alpha(PE_v_a[idx]), .fIn(PE_f[idx]), .vOut(PE_v[idx+1]), .vOut_alpha(PE_v_a[idx+1]), .fOut(PE_f[idx+1]));
+	end
 endgenerate
 
 myMax64 maxTree(.clk(clk), .rst_n(rst_n), .in(PE_v_1D), .result(o_result), .init(o_valid));

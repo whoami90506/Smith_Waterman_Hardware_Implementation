@@ -1,3 +1,7 @@
+`ifdef DEBOUNCE
+`else 
+`define DEBOUNCE
+
 module Debounce(
 	input i_in,
 	input i_clk,
@@ -46,3 +50,5 @@ module Debounce(
 		end
 	end
 endmodule
+
+`endif
