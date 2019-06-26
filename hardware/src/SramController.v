@@ -40,13 +40,13 @@ reg [`Sram_Word-1 : 0] D, n_D;
 
 genvar idx;
 
-`ifdef STANDARD_SRAM
+`ifdef FPGA
+sram_sp_test sram(.QA(Q), .CLKA(clk), .CENA(CEN), .WENA(WEN), .AA(A), .DA(D));
+`else 
 generate
 	for(idx = 0; idx < 32; idx = idx +1) sram_1024x8_t13 sram(.Q(Q[8*idx+7 : 8*idx]), .CLK(clk), .CEN(CEN), 
 		.WEN(WEN), .A(A), .D(D[8*idx+7 : 8*idx]));
 endgenerate
-`else 
-sram_sp_test sram(.QA(Q), .CLKA(clk), .CENA(CEN), .WENA(WEN), .AA(A), .DA(D));
 `endif
 
 //control

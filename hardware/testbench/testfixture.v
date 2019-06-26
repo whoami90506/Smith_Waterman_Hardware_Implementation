@@ -1,139 +1,170 @@
 `timescale 1ns/1ps
-`define CYCLE    20           	        // Modify your clock period here
-`define TERMINATION  50000
-`define ERROR_SUM 10
+`define CYCLE    20.0           	        // Modify your clock period here
+`define TERMINATION  50000000
 
-`include "src/top.v"
-`define DATA "testbench/dat/TA"
+`include "src/util.v"
 
-module test;
-
-//tb
-reg clk;
-reg rst_n;
-integer err, stage;
+module testfixture_fpga ();
+//control
+reg clk, rst_n;
 reg down;
-
-//data
-reg [17:0]   t_mem   [0:`Sram_Addr-1];
-reg [`PE_Array_size*2-1:0] s_mem [0:99999];
-reg [23:0] param;
-integer s_num_itr, s_len_itr, t_itr;
-integer s_num, s_len;
-integer fp_s_len, fp_param, cnt;
-
+reg is_set_t, n_is_set_t;
+reg prev_press;
 
 //top
-reg set_t, start_cal, param_valid;
-reg [17:0] seq_t;
-reg [`PE_Array_size*2-1:0] seq_s;
-reg [`PE_Array_size_log : 0] seq_s_valid;
+reg set_t, start;
+reg [15:0] param;
+wire valid, busy;
+wire[`V_E_F_Bit-1:0] result;
+wire top_request_s;
+reg [`PE_Array_size_log : 0] s_data_valid, n_s_data_valid;
 
-wire busy, valid, request_s;
-wire [`V_E_F_Bit-1 : 0] result;
+//mem
+reg  [15:0] param_mem [0:1];
+reg  [17:0] t_mem [0:1023];
+reg [127:0] s_mem [0: 255];
+reg  [15:0] s_total;
 
-Top top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start_cal), .o_busy(busy), .o_result(result), .o_valid(valid), 
-	.i_t(seq_t), .o_request_s(request_s), .i_s(seq_s), .i_s_valid(seq_s_valid), .i_match(param[23:20]), .i_mismatch(param[19:16]), 
-	.i_minusAlpha (param[15:8]), .i_minusBeta(param[7:0]), .i_param_valid(param_valid));
+//wrappper
+reg   [9:0] t_addr, n_t_addr;
+reg   [7:0] s_addr, n_s_addr;
+reg  [14:0] s_num,  n_s_num;
+reg  [17:0] t_data, n_t_data;
+reg [127:0] s_data, n_s_data;
+
+SmithWaterman top(.clk(clk), .rst_n(rst_n), .i_set_t(set_t), .i_start_cal(start), .o_busy(busy), .o_result(result), 
+	.o_valid(valid), .o_request_s (top_request_s), .i_t(t_data), .i_s(s_data), .i_s_valid(s_data_valid), 
+	.i_match(param[15:12]), .i_mismatch(param[11:8]), .i_minusAlpha(param[7:4]), .i_minusBeta(param[3:0]));
 
 initial begin
-	//tb
-	clk         = 1'b0;
-	rst_n       = 1'b1;
-	err         = 0;
-	stage       = 0;  
-	down        = 1'b0;
+	clk = 1'b1;
+	rst_n = 1'b1;
+	down = 1'b0;
 
-	//data
-	s_num_itr = 0;
-	s_len_itr = 0;
-	t_itr = 0;
+	set_t = 1'b0;
+	start = 1'b0;
+	param = 16'b0;
 
-	//top
-	set_t = 1'd0;
-	start_cal = 1'd0;
-	param_valid = 1'd0;
-	seq_t = 18'd0;
-	seq_s = {(`PE_Array_size*2){1'd0}};
-	seq_s_valid = {(`PE_Array_size_log+1){1'd0}};
+	//reset
+	@(negedge clk); rst_n = 1'b0;
+	#(`CYCLE * 3.0); rst_n = 1'b1;
 
-	@(negedge clk)rst_n = 1'b0;
-	#(2* `CYCLE)  rst_n = 1'b1;
+	//set t
+	#(`CYCLE);
+	set_t = 1'b1;
+	$display("[%t] start set t",$realtime() );
+	#(`CYCLE); set_t = 1'b0;
+	
+	#(`CYCLE);  wait(busy == 0);
+	$display("[%t] finish set t",$realtime() );
 
-	//stage = 1
-	#(0.01* `CYCLE);
-	stage = 2;
-	set_t = 1'd1;
+	//start1
+	@(negedge clk); param = param_mem[0];
+	#(`CYCLE); start = 1'b1;
+	$display("[%t] start first calculation",$realtime() );
+	#(`CYCLE); start = 1'b0;
+
+	wait(valid); $display("[%t] result : %d",$realtime() , result);
+	wait(busy == 0); $display("[%t] finish first calculation",$realtime() );
+
+	//start2
+	@(negedge clk); param = param_mem[1];
+	#(`CYCLE); start = 1'b1;
+	$display("[%t] start second calculation",$realtime() );
+	#(`CYCLE); start = 1'b0;
+
+	wait(valid); $display("[%t] result : %d",$realtime() , result);
+	wait(busy == 0); $display("[%t] finish second calculation",$realtime() );
+
+	down = 1'b1;
+end
+
+//s
+always @(*) begin
+	if(busy) begin
+		if(top_request_s && s_data_valid == 0) begin
+			n_s_addr = (s_num <= 64) ? 0 : s_addr +1;
+			n_s_data = s_mem[s_addr];
+			n_s_num  = (s_num <= 64) ? s_total : s_num - 64;
+			n_s_data_valid = (s_num <= 64) ? s_num : {(`PE_Array_size_log+1){1'b1}};
+		end else begin
+			n_s_addr = s_addr;
+			n_s_num = s_num;
+			n_s_data = 128'b0;
+			n_s_data_valid = 0;
+		end
+
+	end else begin
+		n_s_addr = 0;
+		n_s_num  = s_total;
+		n_s_data = 0;
+		n_s_data_valid = 0;
+	end
+
+end
+
+//t
+always @(*) begin
+	if(is_set_t) begin
+		n_is_set_t = busy | prev_press;
+		n_t_addr = t_addr + 1;
+		n_t_data = t_mem[t_addr];
+	end else begin
+		n_is_set_t = set_t;
+		n_t_addr = 0;
+		n_t_data = 0;
+	end
+end
+
+always @(negedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		//control
+		prev_press <= 1'b0;
+		//s
+		s_addr <= 0;
+		s_num  <= s_total;
+		s_data <= 0;
+		s_data_valid <= 0;
+
+		//t
+		is_set_t <= 1'b0;
+		t_addr <= 0;
+		t_data <= 0;
+	end else begin
+		//control
+		prev_press <= set_t;
+
+		//s
+		s_addr <= n_s_addr;
+		s_num  <= n_s_num;
+		s_data <= n_s_data;
+		s_data_valid <= n_s_data_valid;
+
+		//t
+		is_set_t <= n_is_set_t;
+		t_addr <= n_t_addr;
+		t_data <= n_t_data;
+	end
 end
 
 initial begin
-	$fsdbDumpfile("sw.fsdb");
+	$timeformat(-9, 2, " ns", 17);
+
+	$fsdbDumpfile("sw_fpga.fsdb");
 	$fsdbDumpvars;
 	$fsdbDumpMDA;
 	
-	fp_s_len = $fopen($sformatf("%s_lenS.dat", `DATA), "r");
-	fp_param = $fopen($sformatf("%s_param.dat", `DATA), "r");
-	cnt = $fscanf(fp_s_len, "%d\n", s_num);
-	$readmemb($sformatf("%s_t.dat", `DATA), t_mem);
+	$readmemh($sformatf("%s_param.dat", `DATA), param_mem);
+	$readmemb(`DATA_s,s_mem);
+	$readmemb(`DATA_t,t_mem);
+	s_total = `DATA_S_TOTAL;
 
 	$display("======================================================================");
 	$display("Start simulation !");
 	$display("======================================================================");
 end
 
-always @(negedge clk) begin
-	set_t = 1'd0;
-	start_cal = 1'd0;
-	param_valid = 1'd0;
-	seq_t = 18'd0;
-	seq_s = {(`PE_Array_size*2){1'd0}};
-	seq_s_valid = {(`PE_Array_size_log+1){1'd0}};
-
-	case(stage)
-
-		2 : begin //wait high busy
-			seq_t = t_mem[0];
-			t_itr = 1;
-			if(seq_t[16:14]) stage = 4;
-			else stage = 3;
-		end
-
-		3 : begin // send t
-			seq_t = t_mem[t_itr];
-			t_itr = t_itr +1;
-			if(seq_t[16:14]) stage = 4;
-		end
-
-		4 : begin //wait busy to low
-			if(~busy) stage = 5;
-		end
-
-		5 : begin //set file
-			cnt = $fscanf(fp_s_len, "%d\n", s_len);
-			cnt = $fscanf(fp_param, "%b\n", param);
-			$readmemb($sformatf("%s_s_%0d.dat", `DATA, s_num_itr), s_mem);
-			param_valid = 1'd1;
-			start_cal = 1'd1;
-			stage = 6;
-		end
-
-		6 : begin //start calc
-			down = 1'd1;
-		end
-	endcase
-end
-
-always  #(`CYCLE/2) clk = ~clk;
-
-always @(*) begin 
-	if(err >= `ERROR_SUM) begin
-		$display("================================================================================================================");
-		$display("There are more than %d errors in the code!!!", `ERROR_SUM); 
-		$display("================================================================================================================");
-		#`CYCLE $finish;
-	end
-
-end
+always  #(`CYCLE/2.0) clk = ~clk;
 
 initial begin
 	#(`TERMINATION * `CYCLE);
@@ -146,26 +177,18 @@ end
 
 initial begin
 	@(posedge down);
-	if(err) begin
-		$display("============================================================================");
-     	$display("\n (T_T) ERROR found!! There are %d errors in total.\n", err);
-        $display("============================================================================");
-	end else begin
-		$display("============================================================================");
-        $display("\n");
-        $display("        ****************************              ");
-        $display("        **                        **        /|__/|");
-        $display("        **  Congratulations !!    **      / O,O  |");
-        $display("        **                        **    /_____   |");
-        $display("        **  Simulation Complete!! **   /^ ^ ^ \\  |");
-        $display("        **                        **  |^ ^ ^ ^ |w|");
-        $display("        *************** ************   \\m___m__|_|");
-        $display("\n");
-        $display("============================================================================");
-	end
+	$display("============================================================================");
+    $display("\n");
+    $display("        ****************************              ");
+    $display("        **                        **        /|__/|");
+    $display("        **  Congratulations !!    **      / O,O  |");
+    $display("        **                        **    /_____   |");
+    $display("        **  Simulation Complete!! **   /^ ^ ^ \\  |");
+    $display("        **                        **  |^ ^ ^ ^ |w|");
+    $display("        *************** ************   \\m___m__|_|");
+    $display("\n");
+    $display("============================================================================");
 
 	# `CYCLE $finish;
 end
-
 endmodule
-

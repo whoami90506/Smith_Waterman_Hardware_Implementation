@@ -2,7 +2,9 @@
 `else
 `define FPGA_WRAPPER
 
-`include "src/top.v"
+`define FPGA
+
+`include "src/SmithWaterman.v"
 
 module FPGAWrapper (
 	input clk,    // Clock
@@ -39,9 +41,6 @@ reg [127:0] s_data, n_s_data;
 //top
 wire top_request_s;
 reg [`PE_Array_size_log : 0] s_data_valid, n_s_data_valid;
-
-//read
-integer file_s_len;
 
 initial begin
 	$readmemb(`DATA_s,s_mem);
@@ -117,7 +116,7 @@ always @(posedge clk or negedge rst_n) begin
 	end
 end
 
-Top top(.clk(clk), .rst_n(rst_n), .i_set_t(i_set_t), .i_start_cal(i_start_cal), .o_busy(o_busy), .o_result(o_result), 
+SmithWaterman top(.clk(clk), .rst_n(rst_n), .i_set_t(i_set_t), .i_start_cal(i_start_cal), .o_busy(o_busy), .o_result(o_result), 
 	.o_valid(o_valid), .o_request_s (top_request_s), .i_t(t_data), .i_s(s_data), .i_s_valid(s_data_valid), 
 	.i_match(i_match), .i_mismatch(i_mismatch), .i_minusAlpha(i_minusAlpha), .i_minusBeta(i_minusBeta));
 
