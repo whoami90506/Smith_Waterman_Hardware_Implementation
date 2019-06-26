@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
-`define CYCLE    8.0           	        // Modify your clock period here
-`define TERMINATION  50000000
+`define CYCLE    6.0           	        // Modify your clock period here
+`define TERMINATION  500000
 
 `include "src/util.v"
 
