@@ -1,4 +1,4 @@
-set cycle 4.0
+set cycle 4.5
 set t_in  [expr $cycle/2]
 
 create_clock -name clk  -period $cycle   [get_ports  clk] 
