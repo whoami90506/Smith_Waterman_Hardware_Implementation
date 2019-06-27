@@ -16,7 +16,8 @@ module myMax #(parameter DATA_WIDTH = `V_E_F_Bit)(
 	assign chooseA = apbn | (apbp & compare);
 	assign result = anbn ? {DATA_WIDTH{1'b0}} :
 					chooseA ? a : b;
-	
+	// assign result = a[DATA_WIDTH-1] & b[DATA_WIDTH-1] ? {DATA_WIDTH{1'b0}} :
+	// 				$signed(a) > $signed(b) ? a : b;
 endmodule
 
 module myMax4 #(parameter DATA_WIDTH = `V_E_F_Bit) (
