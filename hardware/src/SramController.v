@@ -19,6 +19,7 @@ module SramController (
 	input [`Sram_Word-1:0] i_send_data,
 	output reg [`Max_T_size_log-1 : 0] o_T_size,
 	input i_init,
+	input i_rst_addr,
 	
 	//top
 	input i_start_read_t,
@@ -188,6 +189,7 @@ always @(*) begin
 					end
 				end
 			end else begin //normal read write
+				n_readAddr = i_rst_addr ? writeAddr : readAddr;
 
 				//control
 				if(isRequesting)n_isRequesting = (isRequesting == 2'd3) ? 2'd0 : isRequesting + 2'd1;

@@ -3,11 +3,11 @@
 `define UTIL
 
 //control
-`define DATA       "dat/00256x0256"
-`define DATA_s     "dat/00256x0256_s.dat"
-`define DATA_t     "dat/00256x0256_t.dat"
-`define DATA_s_len "dat/00256x0256_s_len.dat"
-`define DATA_S_TOTAL 256
+`define DATA       "dat/00032x0032"
+`define DATA_s     "dat/00032x0032_s.dat"
+`define DATA_t     "dat/00032x0032_t.dat"
+`define DATA_s_len "dat/00032x0032_s_len.dat"
+`define DATA_S_TOTAL 32
 
 //parameter setting
 `define Alpha_Beta_Bit 4

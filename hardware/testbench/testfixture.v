@@ -155,7 +155,7 @@ end
 initial begin
 	$timeformat(-9, 2, " ns", 17);
 
-	$fsdbDumpfile("sw_fpga.fsdb");
+	$fsdbDumpfile("sw.fsdb");
 	$fsdbDumpvars;
 	$fsdbDumpMDA;
 

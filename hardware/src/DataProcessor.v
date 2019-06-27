@@ -16,6 +16,7 @@ module DataProcessor (
 	output reg [`Sram_Word-1:0] o_send_data,
 	input [`Max_T_size_log-1 : 0] i_T_size,
 	output reg o_sram_init,
+	output reg o_sram_rst_addr,
 
 	//PEArrayController
 	output reg o_lock,
@@ -58,7 +59,7 @@ localparam CACHE_ST      = 3'd5;
 localparam CACHE_T       = 3'd6;
 localparam END           = 3'd7;
 reg [2:0] state, n_state;
-reg need_init_sram, n_need_init_sram;
+reg need_init_sram, n_need_init_sram, n_o_sram_rst_addr;
 reg n_o_busy;
 wire use_sram_w;
 wire t_nxt_last_w, s_nxt_last_w;
@@ -96,18 +97,21 @@ reg [`BIT_P_GROUP-1 : 0] n_cache [0 : 15];
 reg [3:0] cache_read_addr, n_cache_read_addr;
 reg [3:0] cache_write_addr, n_cache_write_addr;
 wire cache_empty_w;
+wire [`BIT_P_GROUP-1 : 0] cache_data;
 
 assign use_sram_w = (i_T_size > `DP_LIMIT);
 assign t_nxt_last_w = (t_counter+2 == i_T_size);
 assign s_nxt_last_w = (s_num <= 1) && s_no_more;
 assign cache_empty_w = (cache_read_addr == cache_write_addr);
 assign s_empty_w = (s_num == 0) && (~s_no_more);
+assign cache_data = cache[cache_read_addr];
 
 //control
 always @(*) begin
 	n_o_busy = 1'd1;
 	n_o_sram_init = 1'b0;
 	n_need_init_sram = need_init_sram;
+	n_o_sram_rst_addr = 1'd0;
 
 	case (state)
 		IDLE : begin
@@ -141,20 +145,69 @@ always @(*) begin
 			else n_state = SRAM_T;
 		end
 
+		CACHE_INIT_ST : begin
+			t_empty_w = (t_sram_PE_num == 0);
+			valid_w = (~s_empty_w) & (~t_empty_w);
+
+			if(valid_w) begin
+				case ({s_nxt_last_w, t_nxt_last_w})
+					2'b00 : n_state = CACHE_INIT_ST;
+					2'b01 : n_state = CACHE_ST;
+					2'b10 : n_state = CACHE_INIT_T;
+					2'b11 : n_state = END;
+				endcase
+			end else n_state = CACHE_INIT_ST;
+		end
+
+		CACHE_INIT_T : begin
+			t_empty_w = (t_sram_PE_num == 0);
+			valid_w = (~t_empty_w);			
+
+			if(valid_w) begin
+				if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : CACHE_ST;
+				else n_state = CACHE_INIT_T;
+			end
+		end
+
+		CACHE_ST : begin
+			t_empty_w = cache_empty_w;
+			valid_w = (~s_empty_w) & (~t_empty_w);
+
+			if(valid_w) begin
+				case ({s_nxt_last_w, t_nxt_last_w})
+					2'b00 : n_state = CACHE_ST;
+					2'b01 : n_state = CACHE_ST;
+					2'b10 : n_state = CACHE_T;
+					2'b11 : n_state = END;
+				endcase
+			end else n_state = CACHE_ST;
+		end
+
+		CACHE_T : begin
+			t_empty_w = cache_empty_w;
+			valid_w = (~t_empty_w);			
+
+			if(valid_w) begin
+				if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : CACHE_ST;
+				else n_state = CACHE_T;
+			end
+		end
+
 		END : begin
-			t_empty_w = 1'b0;
+			t_empty_w = 1'b1;
 			valid_w   = 1'b0;
 
 			n_state = i_finish ? IDLE : END;
 			n_need_init_sram = 1'b0;
+			n_o_sram_rst_addr = i_finish;
 		end
 
-		default : begin
-			t_empty_w = 1'b1;
-			valid_w = 1'b0;
+		// default : begin
+		// 	t_empty_w = 1'b1;
+		// 	valid_w = 1'b0;
 
-			n_state = IDLE;
-		end
+		// 	n_state = IDLE;
+		// end
 	endcase
 end
 
@@ -176,7 +229,7 @@ always @(*) begin
 			n_o_s_last = 1'b0;
 		end
 
-		SRAM_ST : begin
+		SRAM_ST, CACHE_ST, CACHE_INIT_ST : begin
 			case ({valid_w, (i_s_valid != 0)})
 				2'b11 : begin
 					if(o_s_addr != 6'd63) n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
@@ -210,7 +263,7 @@ always @(*) begin
 			endcase
 		end//SRAM_ST
 
-		SRAM_T : begin
+		SRAM_T, CACHE_INIT_T, CACHE_T : begin
 			if(i_s_valid) begin
 				n_s_mem[ (`PE_Array_size*2 - s_num)*2 -1 -: `PE_Array_size*2] = i_s;
 				n_s_num = (~i_s_valid) ? s_num + i_s_valid[`PE_Array_size_log-1 : 0] : s_num + `PE_Array_size;
@@ -245,7 +298,7 @@ always @(*) begin
 	n_cache_read_addr = cache_read_addr;
 
 	case (state)
-		SRAM_ST, SRAM_T : begin
+		SRAM_ST, SRAM_T, CACHE_INIT_ST, CACHE_INIT_T : begin
 			if(valid_w) begin
 				n_t_counter = (t_counter >= i_T_size -1) ? 0 : t_counter +1;
 				n_o_t   = t_sram_mem[`BIT_P_GROUP * `T_per_word * 2 -1 -: 2];
@@ -277,6 +330,21 @@ always @(*) begin
 						t_sram_PE_num + `T_per_word;
 					n_o_sram_request = 1'b0;
 				end
+			end
+		end
+
+		CACHE_ST, CACHE_T : begin
+			if(valid_w) begin
+				n_t_counter = (t_counter >= i_T_size -1) ? 0 : t_counter +1;
+				n_o_t   = cache_data[`BIT_P_GROUP-1 -: 2];
+				n_o_v   = {1'b0, cache_data[`BIT_P_GROUP -3 -: `V_E_F_Bit-1]};
+				n_o_v_a = {1'b0, cache_data[`BIT_P_GROUP -3 -: `V_E_F_Bit-1]} + i_minusA;
+				n_o_f   = {1'b0, cache_data[`BIT_P_GROUP - `V_E_F_Bit -2 -: `V_E_F_Bit-1]};
+				n_o_t_newline = (t_counter +1 >= i_T_size);
+				n_cache_read_addr = cache_read_addr + 4'd1;
+
+			end else begin
+				n_o_lock = 1'd1;
 			end
 		end
 
@@ -317,6 +385,13 @@ always @(*) begin
 				n_o_sram_send = (t_store_num == `T_per_word -1 || t_store_counter == i_T_size -1);
 				n_t_store_counter = (t_store_counter == i_T_size -1) ? 0 : t_store_counter + 1;
 				n_t_store_num = (t_store_num == `T_per_word -1 || t_store_counter == i_T_size -1) ? 3'd0 : t_store_num + 3'd1;
+			end
+		end
+
+		CACHE_INIT_ST, CACHE_INIT_T, CACHE_ST, CACHE_T : begin
+			if(i_t_valid) begin
+				n_cache[cache_write_addr] = {i_t, i_v[`V_E_F_Bit-2 : 0], i_f[`V_E_F_Bit-2 : 0]};
+				n_cache_write_addr = cache_write_addr + 4'd1;
 			end
 		end
 	
@@ -366,6 +441,7 @@ always @(posedge clk or negedge rst_n) begin
 		t_store_num <= 3'd0;
 		t_store_counter <= 0;
 		o_sram_init <= 1'b0;
+		o_sram_rst_addr <= 1'b0;
 
 		//cache
 		for(i = 0; i < 16; i = i +1)cache[i] <= {(`BIT_P_GROUP){1'b1}};
@@ -406,6 +482,7 @@ always @(posedge clk or negedge rst_n) begin
 		t_store_num <= n_t_store_num;
 		t_store_counter <= n_t_store_counter;
 		o_sram_init <= n_o_sram_init;
+		o_sram_rst_addr <= n_o_sram_rst_addr;
 
 		//cache
 		for(i = 0; i < 16; i = i +1)cache[i] <= n_cache[i];

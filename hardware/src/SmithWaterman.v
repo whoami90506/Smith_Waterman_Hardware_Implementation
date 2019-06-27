@@ -67,7 +67,7 @@ wire dp_busy;
 
 wire PE_lock, PE_enable_0, PE_newline;
 wire seq_s_last;
-wire sram_init;
+wire sram_init, dp_rst_addr;
 wire [`PE_Array_size*2-1:0] seq_s;
 wire [`PE_Array_size_log-1 : 0] seq_s_addr;
 wire [1:0] t_dp_to_PE;
@@ -186,25 +186,25 @@ end
 `ifdef FPGA
 SramController mem(.clk(clk), .rst_n(rst_n), .i_PE_request(dp_request_sram), .o_request_data(data_sram_to_dp), 
 	.i_PE_send(dp_store_sram), .i_send_data(data_dp_to_sram), .o_T_size(t_size), .i_init(sram_init), 
-	.i_start_read_t(start_read_t), .i_t(i_t), .o_busy(sram_busy));
+	.i_start_read_t(start_read_t), .i_t(i_t), .o_busy(sram_busy), .i_rst_addr(dp_rst_addr));
 
 DataProcessor dp(.clk(clk), .rst_n(rst_n), .o_sram_request(dp_request_sram), .i_request_data(data_sram_to_dp), .o_sram_send(dp_store_sram), 
 	.o_send_data(data_dp_to_sram), .i_T_size(t_size), .o_lock(PE_lock), .i_init(o_valid), .o_s(seq_s), .o_s_last(seq_s_last), 
 	.o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_v_a(v_a_dp_to_PE), .o_f(f_dp_to_PE), .o_t_newline(PE_newline), .o_t_enable_0(PE_enable_0), 
 	.i_t(t_PE_to_dp), .i_v(v_PE_to_dp), .i_f(f_PE_to_dp), .o_request_s(o_request_s), .i_s(i_s), .i_s_valid(i_s_valid), 
 	.i_t_valid(t_valid), .i_start_calc(start_cal), .o_busy(dp_busy), .o_s_addr(seq_s_addr), .i_minusA(post_alpha), 
-	.o_sram_init(sram_init), .i_finish(o_valid));
+	.o_sram_init(sram_init), .i_finish(o_valid), .o_sram_rst_addr(dp_rst_addr));
 `else 
 SramController mem(.clk(clk), .rst_n(rst_n), .i_PE_request(dp_request_sram), .o_request_data(data_sram_to_dp), 
 	.i_PE_send(dp_store_sram), .i_send_data(data_dp_to_sram), .o_T_size(t_size), .i_init(sram_init), 
-	.i_start_read_t(start_read_t), .i_t(_t), .o_busy(sram_busy));
+	.i_start_read_t(start_read_t), .i_t(_t), .o_busy(sram_busy), .i_rst_addr(dp_rst_addr));
 
 DataProcessor dp(.clk(clk), .rst_n(rst_n), .o_sram_request(dp_request_sram), .i_request_data(data_sram_to_dp), .o_sram_send(dp_store_sram), 
 	.o_send_data(data_dp_to_sram), .i_T_size(t_size), .o_lock(PE_lock), .i_init(o_valid), .o_s(seq_s), .o_s_last(seq_s_last), 
 	.o_t(t_dp_to_PE), .o_v(v_dp_to_PE), .o_v_a(v_a_dp_to_PE), .o_f(f_dp_to_PE), .o_t_newline(PE_newline), .o_t_enable_0(PE_enable_0), 
 	.i_t(t_PE_to_dp), .i_v(v_PE_to_dp), .i_f(f_PE_to_dp), .o_request_s(o_request_s), .i_s(_s), .i_s_valid(_s_valid), 
 	.i_t_valid(t_valid), .i_start_calc(start_cal), .o_busy(dp_busy), .o_s_addr(seq_s_addr), .i_minusA(post_alpha), 
-	.o_sram_init(sram_init), .i_finish(o_valid)); 
+	.o_sram_init(sram_init), .i_finish(o_valid), .o_sram_rst_addr(dp_rst_addr)); 
 `endif
 
 PEArrayController PE(.clk(clk), .rst_n(rst_n), .i_match(post_match), .i_mismatch(post_mismatch), .i_minusAlpha(post_alpha), 
