@@ -1,0 +1,1 @@
+testbench/testfixture.v src/SmithWaterman.v +access+r +notimingchecks

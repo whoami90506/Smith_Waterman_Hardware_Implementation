@@ -1,0 +1,1 @@
+testbench/testfixture.v syn/SmithWaterman_syn.v -v tsmc13_neg.v +access+r +define+SYN

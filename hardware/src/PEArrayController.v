@@ -89,9 +89,9 @@ always @(*) begin
 	n_PE_enable = PE_enable;
 	n_o_valid = 1'b0;
 	n_o_t_valid = 1'b0;
-	n_o_t = PE_t[`PE_Array_size-1];
-	n_o_v = PE_v[`PE_Array_size-1];
-	n_o_f = PE_f[`PE_Array_size-1];
+	n_o_t = PE_t[s_using];
+	n_o_v = PE_v[s_using];
+	n_o_f = PE_f[s_using];
 
 	case (state)
 		IDLE : begin
