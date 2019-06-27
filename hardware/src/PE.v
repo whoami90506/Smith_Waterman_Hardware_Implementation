@@ -43,7 +43,7 @@ assign vOut_alpha_real = newLineIn ? minusAlpha : vOut_alpha;
 myMax calE(.a(E_beta), .b(vOut_alpha_real), .result(eOut));
 
 //left
-wire [`V_E_F_Bit-1 : 0] fIn_alpha, fResult, fIn_beta;
+wire [`V_E_F_Bit-1 : 0] fResult, fIn_beta;
 assign fIn_beta = fIn + minusBeta;
 myMax calF(.a(vIn_alpha), .b(fIn_beta), .result(fResult));
 

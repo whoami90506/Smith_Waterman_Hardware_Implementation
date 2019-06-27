@@ -104,7 +104,7 @@ always @(*) begin
 			if(~i_lock) begin
 				n_state = (i_s_last || (i_s_addr == `PE_Array_size-1) || (i_s_addr == i_t_size -1) ) ? CALC : OPEN;
 				n_s_using = i_s_addr;
-				n_PE_enable[i_s_addr] = ~i_s_last;
+				n_PE_enable[i_s_addr] = ~i_s_last && (i_s_addr != i_t_size -1);
 			end
 		end
 
@@ -163,7 +163,7 @@ always @(posedge clk or negedge rst_n) begin
 
 		//PE
 		PE_enable <= n_PE_enable;
-		PE_last_enable_post_buf <= PE_enable_all[`PE_Array_size-1];
+		PE_last_enable_post_buf <= PE_enable_all[s_using];
 	end
 end
 

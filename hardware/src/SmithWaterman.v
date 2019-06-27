@@ -37,8 +37,8 @@ reg n_o_busy;
 reg [17:0] _t;
 reg [`PE_Array_size*2-1:0] _s;
 reg [`PE_Array_size_log : 0] _s_valid;
-reg [`Match_bit-1 : 0 ] _match, _mismatch;
-reg [`Alpha_Beta_Bit-1:0] _minusAlpha, _minusBeta;
+reg [`Match_bit-1 : 0 ] _match;
+reg [`Alpha_Beta_Bit-1:0] _minusAlpha, _minusBeta, _mismatch;
 
 //controll
 localparam IDLE = 2'd0;
@@ -120,7 +120,7 @@ end
 always @(*) begin
 	if(state != CALC) begin
 		n_post_match = _match;
-		n_post_mismatch = {{(`V_E_F_Bit - `Match_bit){1'd1}}, (~_mismatch + 1)};
+		n_post_mismatch = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_mismatch + 1)};
 		n_post_alpha = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_minusAlpha + 1)};
 		n_post_beta  = {{(`V_E_F_Bit - `Alpha_Beta_Bit){1'd1}}, (~_minusBeta + 1)};
 
