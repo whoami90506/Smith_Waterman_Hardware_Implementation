@@ -166,7 +166,7 @@ always @(*) begin
 			if(valid_w) begin
 				if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : CACHE_ST;
 				else n_state = CACHE_INIT_T;
-			end
+			end else n_state = CACHE_INIT_T;
 		end
 
 		CACHE_ST : begin
@@ -190,7 +190,7 @@ always @(*) begin
 			if(valid_w) begin
 				if(valid_w & t_nxt_last_w) n_state = o_s_last ? END : CACHE_ST;
 				else n_state = CACHE_T;
-			end
+			end else n_state = CACHE_T;
 		end
 
 		END : begin
