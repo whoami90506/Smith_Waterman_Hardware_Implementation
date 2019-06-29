@@ -92,10 +92,10 @@ reg [`Max_T_size_log-1 : 0] t_store_counter, n_t_store_counter;
 reg n_o_sram_init;
 
 //cache
-reg [`BIT_P_GROUP-1 : 0]   cache [0 : 15];
-reg [`BIT_P_GROUP-1 : 0] n_cache [0 : 15];
-reg [3:0] cache_read_addr, n_cache_read_addr;
-reg [3:0] cache_write_addr, n_cache_write_addr;
+reg [`BIT_P_GROUP-1 : 0]   cache [0 : 31];
+reg [`BIT_P_GROUP-1 : 0] n_cache [0 : 31];
+reg [4:0] cache_read_addr, n_cache_read_addr;
+reg [4:0] cache_write_addr, n_cache_write_addr;
 wire cache_empty_w;
 wire [`BIT_P_GROUP-1 : 0] cache_data;
 
@@ -150,11 +150,11 @@ always @(*) begin
 			valid_w = (~s_empty_w) & (~t_empty_w);
 
 			if(valid_w) begin
-				case ({s_nxt_last_w, t_nxt_last_w})
+				case ({s_nxt_last_w || o_s_addr == `PE_Array_size-2, t_nxt_last_w})
 					2'b00 : n_state = CACHE_INIT_ST;
 					2'b01 : n_state = CACHE_ST;
 					2'b10 : n_state = CACHE_INIT_T;
-					2'b11 : n_state = END;
+					2'b11 : n_state = s_nxt_last_w ? END : CACHE_ST;
 				endcase
 			end else n_state = CACHE_INIT_ST;
 		end
@@ -174,11 +174,11 @@ always @(*) begin
 			valid_w = (~s_empty_w) & (~t_empty_w);
 
 			if(valid_w) begin
-				case ({s_nxt_last_w, t_nxt_last_w})
+				case ({s_nxt_last_w || o_s_addr == `PE_Array_size-2, t_nxt_last_w})
 					2'b00 : n_state = CACHE_ST;
 					2'b01 : n_state = CACHE_ST;
 					2'b10 : n_state = CACHE_T;
-					2'b11 : n_state = END;
+					2'b11 : n_state = s_nxt_last_w ? END : CACHE_ST;
 				endcase
 			end else n_state = CACHE_ST;
 		end
@@ -232,8 +232,8 @@ always @(*) begin
 		SRAM_ST, CACHE_ST, CACHE_INIT_ST : begin
 			case ({valid_w, (i_s_valid != 0)})
 				2'b11 : begin
-					if(o_s_addr != 6'd63) n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
-					else n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					if(o_s_addr == 6'd63 || o_s_addr == i_T_size -1) n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					else n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
 					n_s_mem[ (`PE_Array_size*2 - s_num +1)*2 -1 -: `PE_Array_size*2] = i_s;
 					n_s_num = (~i_s_valid) ? s_num + i_s_valid -1 : s_num + `PE_Array_size -1;
@@ -242,8 +242,8 @@ always @(*) begin
 					n_o_s_last = 1'b0;
 				end
 				2'b10 : begin
-					if(o_s_addr != 6'd63) n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
-					else n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					if(o_s_addr == 6'd63 || o_s_addr == i_T_size -1) n_o_s[1:0] = s_mem[(`PE_Array_size*4 -1) -: 2];
+					else n_o_s[2*(o_s_addr+6'd1) +: 2] = s_mem[(`PE_Array_size*4 -1) -: 2];
 					n_s_mem = s_mem << 2;
 					n_s_num = s_num -1;
 					n_o_s_addr = o_s_addr == i_T_size -1 ? 0 :  o_s_addr+1;
@@ -258,7 +258,6 @@ always @(*) begin
 				end
 				2'b00 : begin
 					n_o_request_s = (s_num < `PE_Array_size) && (~s_no_more);
-					n_o_s_last = s_nxt_last_w;
 				end
 			endcase
 		end//SRAM_ST
@@ -341,7 +340,7 @@ always @(*) begin
 				n_o_v_a = {1'b0, cache_data[`BIT_P_GROUP -3 -: `V_E_F_Bit-1]} + i_minusA;
 				n_o_f   = {1'b0, cache_data[`BIT_P_GROUP - `V_E_F_Bit -2 -: `V_E_F_Bit-1]};
 				n_o_t_newline = (t_counter +1 >= i_T_size);
-				n_cache_read_addr = cache_read_addr + 4'd1;
+				n_cache_read_addr = cache_read_addr + 5'd1;
 
 			end else begin
 				n_o_lock = 1'd1;
@@ -350,7 +349,7 @@ always @(*) begin
 
 		END : begin
 			n_o_t_enable_0 = 1'b0;
-			n_cache_read_addr = 4'd0;
+			n_cache_read_addr = 5'd0;
 		end
 	
 		//IDLE
@@ -362,7 +361,7 @@ always @(*) begin
 			n_t_sram_PE_num = 4'd0;
 			n_o_sram_request = 1'b0;
 
-			n_cache_read_addr = 4'd0;
+			n_cache_read_addr = 5'd0;
 
 		end
 	endcase
@@ -376,7 +375,7 @@ always @(*) begin
 	n_t_store_counter = t_store_counter;
 
 	n_cache_write_addr = cache_write_addr;
-	for(i = 0; i < 16; i = i+1)n_cache[i] = cache[i];
+	for(i = 0; i < 32; i = i+1)n_cache[i] = cache[i];
 
 	case (state)
 		SRAM_ST, SRAM_T : begin
@@ -391,7 +390,7 @@ always @(*) begin
 		CACHE_INIT_ST, CACHE_INIT_T, CACHE_ST, CACHE_T : begin
 			if(i_t_valid) begin
 				n_cache[cache_write_addr] = {i_t, i_v[`V_E_F_Bit-2 : 0], i_f[`V_E_F_Bit-2 : 0]};
-				n_cache_write_addr = cache_write_addr + 4'd1;
+				n_cache_write_addr = cache_write_addr + 5'd1;
 			end
 		end
 	
@@ -400,7 +399,7 @@ always @(*) begin
 			n_t_store_num = 3'd0;
 			n_t_store_counter = 0;
 
-			n_cache_write_addr = 4'd0;
+			n_cache_write_addr = 5'd0;
 		end
 	endcase
 
@@ -444,7 +443,7 @@ always @(posedge clk or negedge rst_n) begin
 		o_sram_rst_addr <= 1'b0;
 
 		//cache
-		for(i = 0; i < 16; i = i +1)cache[i] <= {(`BIT_P_GROUP){1'b1}};
+		for(i = 0; i < 32; i = i +1)cache[i] <= {(`BIT_P_GROUP){1'b1}};
 		cache_read_addr <= 0;
 		cache_write_addr <= 0;
 
@@ -485,10 +484,10 @@ always @(posedge clk or negedge rst_n) begin
 		o_sram_rst_addr <= n_o_sram_rst_addr;
 
 		//cache
-		for(i = 0; i < 16; i = i +1)cache[i] <= n_cache[i];
+		for(i = 0; i < 32; i = i +1)cache[i] <= n_cache[i];
 		cache_read_addr <= n_cache_read_addr;
 		cache_write_addr <= n_cache_write_addr;
 	end
 end
 endmodule
-`endif//DATA_PROCESSOR
+`endif //DATA_PROCESSOR

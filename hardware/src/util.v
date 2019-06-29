@@ -3,11 +3,11 @@
 `define UTIL
 
 //control
-`define DATA       "dat/00512x0512"
-`define DATA_s     "dat/00512x0512_s.dat"
-`define DATA_t     "dat/00512x0512_t.dat"
-`define DATA_s_len "dat/00512x0512_s_len.dat"
-`define DATA_S_TOTAL 512
+`define DATA       "dat/00080x0080"
+`define DATA_s     "dat/00080x0080_s.dat"
+`define DATA_t     "dat/00080x0080_t.dat"
+`define DATA_s_len "dat/00080x0080_s_len.dat"
+`define DATA_S_TOTAL 80
 
 //parameter setting
 `define Alpha_Beta_Bit 4
@@ -35,7 +35,7 @@
 `define QUEUE_SIZE_LOG $clog2(`QUEUE_SIZE)
 
 //DATA PROCESSOR
-`define DP_LIMIT 76
+`define DP_LIMIT 96
 
 `include "src/utilModule.v"
 

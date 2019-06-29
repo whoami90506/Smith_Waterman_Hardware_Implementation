@@ -110,7 +110,6 @@ always @(*) begin
 
 		CALC :begin
 			n_state = (PE_enable_all == {`PE_Array_size{1'b0}})  ? END : CALC;
-			n_s_using = i_s_last ? i_s_addr : s_using;
 			n_o_t_valid = t_valid_buf & PE_last_enable_post_buf;
 
 			if(~i_lock) begin
