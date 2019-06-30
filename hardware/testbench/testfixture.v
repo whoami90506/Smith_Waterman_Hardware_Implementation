@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`define CYCLE    5.0           	        // Modify your clock period here
+`define CYCLE    4.8           	        // Modify your clock period here
 `define TERMINATION  50000000
 
 `include "src/util.v"
@@ -52,10 +52,10 @@ initial begin
 
 	//reset
 	@(negedge clk); rst_n = 1'b0;
-	#(`CYCLE * 3.0); rst_n = 1'b1;
+	#(`CYCLE * 3.5); rst_n = 1'b1;
 
 	//set t
-	#(`CYCLE);
+	@(negedge clk);#(`CYCLE);
 	set_t = 1'b1;
 	$display("[%t] start set t",$realtime() );
 	#(`CYCLE); set_t = 1'b0;
