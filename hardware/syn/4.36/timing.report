@@ -1,0 +1,87 @@
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : SmithWaterman
+Version: N-2017.09-SP2
+Date   : Sun Jun 30 21:05:14 2019
+****************************************
+
+Operating Conditions: slow   Library: slow
+Wire Load Model Mode: top
+
+  Startpoint: dp/o_s_reg_77_
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: PE_name1_37__PE_cell_vOut_alpha_reg_14_
+            (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  SmithWaterman      tsmc13_wl10           slow
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.50       0.50
+  dp/o_s_reg_77_/CK (DFFRX2)                              0.00       0.50 r
+  dp/o_s_reg_77_/Q (DFFRX2)                               0.35       0.85 f
+  dp/o_s[77] (DataProcessor)                              0.00       0.85 f
+  U51576/Y (XOR2X4)                                       0.10       0.95 f
+  U87512/Y (NOR2X8)                                       0.08       1.03 r
+  U87513/Y (BUFX16)                                       0.11       1.14 r
+  U42283/Y (MXI2X2)                                       0.17       1.31 r
+  U87516/Y (NAND2X4)                                      0.11       1.42 f
+  U87609/Y (OAI21X4)                                      0.14       1.56 r
+  U28803/Y (AOI21X4)                                      0.09       1.65 f
+  U28802/Y (OAI21X4)                                      0.15       1.81 r
+  U20427/Y (INVX8)                                        0.07       1.87 f
+  U52666/Y (OAI21X2)                                      0.13       2.01 r
+  U87683/Y (XNOR2X4)                                      0.16       2.16 f
+  U26735/Y (NAND2X2)                                      0.09       2.25 r
+  U45713/Y (CLKINVX1)                                     0.16       2.41 f
+  U38564/Y (NAND3X2)                                      0.15       2.55 r
+  U47219/Y (NAND4X4)                                      0.08       2.64 f
+  U32141/Y (NOR4X6)                                       0.14       2.77 r
+  U34854/Y (NAND2X6)                                      0.06       2.83 f
+  U57726/Y (NAND2X8)                                      0.08       2.91 r
+  U57634/Y (BUFX20)                                       0.12       3.03 r
+  U57637/Y (MXI2X4)                                       0.12       3.15 f
+  U57635/Y (OAI21X4)                                      0.16       3.31 r
+  U23389/Y (INVX4)                                        0.04       3.35 f
+  U87787/Y (OAI2BB1X4)                                    0.10       3.45 f
+  U54559/Y (AOI21X4)                                      0.08       3.54 r
+  U23371/Y (OAI2BB1X4)                                    0.06       3.60 f
+  U29817/Y (NAND2X8)                                      0.09       3.70 r
+  U31443/Y (INVX20)                                       0.07       3.77 f
+  U87789/Y (MXI2X4)                                       0.11       3.88 r
+  U26274/Y (NAND2X6)                                      0.06       3.94 f
+  U26273/Y (OAI21X4)                                      0.14       4.09 r
+  U47287/Y (NAND2X6)                                      0.06       4.14 f
+  U27266/Y (NAND2X8)                                      0.07       4.21 r
+  U27265/Y (NAND2X8)                                      0.04       4.25 f
+  U29632/Y (NAND3X8)                                      0.05       4.30 r
+  U56276/Y (BUFX20)                                       0.10       4.40 r
+  U51242/Y (OAI2BB1X4)                                    0.10       4.50 r
+  U51241/Y (XOR2X4)                                       0.08       4.59 f
+  U57727/Y (OAI22X4)                                      0.07       4.66 r
+  PE_name1_37__PE_cell_vOut_alpha_reg_14_/D (DFFRX2)      0.00       4.66 r
+  data arrival time                                                  4.66
+
+  clock clk (rise edge)                                   4.36       4.36
+  clock network delay (ideal)                             0.50       4.86
+  clock uncertainty                                      -0.10       4.76
+  PE_name1_37__PE_cell_vOut_alpha_reg_14_/CK (DFFRX2)     0.00       4.76 r
+  library setup time                                     -0.10       4.66
+  data required time                                                 4.66
+  --------------------------------------------------------------------------
+  data required time                                                 4.66
+  data arrival time                                                 -4.66
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1
