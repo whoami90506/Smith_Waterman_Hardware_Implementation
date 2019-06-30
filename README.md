@@ -1,26 +1,7 @@
 # SmithWaterman Harware Implementation
-###### tags: `github` `project`
+###### tags:  `project`
 Bachelor project from the professor Yi-Chang Lu in NTUEE
 [github](https://github.com/whoami90506/Smith_Waterman_Hardware_Implementation)
-## Table of Contents
-[TOC]
-
-## User flows
-```sequence
-User->Core: reset
-Note right of Core: START
-User->Core: store sequence t
-Note right of Core: Setting t
-User->Core: sending t
-Note right of Core: IDLE
-User->Core: calculating
-Note right of Core: CACULATING
-User->Core: sending s
-Core->User: result
-Note right of Core: RESET
-Core->User: finish
-Note right of Core: IDLE
-```
 
 ## How to use
 ### software
@@ -66,13 +47,9 @@ It's quite easy to use **root_folder/convert.py** to transform software input da
 python convert.py <input_software_data> <outout_prefix>
 ```
 There will be four file named as <output_prefix>_s.dat, <output_prefix>_t.dat, <output_prefix>_s_len.dat, <output_prefix>_param.dat.
-:::warning
-Although the hardware design support unlimited groups of parameter, the testbech only read **2** groups of parameters.
-:::
 
-:::info
-The python script transform A to 2'b00, C to 2'b01, G to 2'b10, T to 2'b11.
-:::
+> * Although the hardware design support unlimited groups of parameter, the testbench only read **2** groups of parameters.
+> * The python script transform A to 2'b00, C to 2'b01, G to 2'b10, T to 2'b11.
 
 ---
 
@@ -102,9 +79,8 @@ Or you can make the hardware input file manually.
         * col[3:0] represent $\beta$
     * Testbench only support **2** groups of parameter.
 
-:::warning
-The name of the hardware input data must be the format above to fit the testbench.
-:::
+>The name of the hardware input data must be the format above to fit the testbench.
+
 #### Edit hardware/src/util.v
 there are 5 define need to set to get input data
 * `define DATA   : <output_prefix>
@@ -119,9 +95,8 @@ there are 5 define need to set to get input data
 ```shell
 ncverilog -f rtl.f
 ```
-:::warning
-make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
-:::
+
+>make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
 
 #### Synthesis
 1. Edit the cycle time in syn/syn_DC.sdc
@@ -130,9 +105,8 @@ make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
 dc_shell -f syn/SmithWaterman.tcl
 ```
 SmithWaterman_syn.v, SmithWaterman_syn.sdf, and SmithWaterman_syn.ddc will be in syn/.
-:::warning
-make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
-:::
+
+>make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.:
 
 #### Gate-level simulation
 1. Edit cycle time in hardware/testbench/testfixture.v .
@@ -141,10 +115,10 @@ make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
 ```shell
 ncverilog -f syn.f
 ```
-:::warning
-* make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
-* make sure tsmc13_neg.v which is not in github is in hardware/ .
-:::
+
+>* make sure folder sram_1024x8_t13/ which is not in github is in hardware/Memory/.
+>* make sure tsmc13_neg.v which is not in github is in hardware/ .
+
 
 #### FPGA simulation(by ncverilog)
 1. Edit hardware/src/util.v to set the right input file.
@@ -180,8 +154,8 @@ ncverilog -f fpga.f
 
 | Cycle time(ns) | Area($\mu m^2$) | Cycle time * Area |Power(mW) |Acceleration ratio with software (16384x1024)|
 | -------- | -------- | -------- | --- |-|
-| 7    | 3273669.065     | 22915683.45|54.4069 | 115.1432| 
-| 5 |   3548652.958 |17743264.79    |82.3444|161.20048| 
+| 7    | 3273669.065     | 22915683.45|54.4069 | 115.1432|
+| 5 |   3548652.958 |17743264.79    |82.3444|161.20048|
 |4.75|  3654453.598|    17358654.59 |89.3567|   169.6847158|
 |4.6|   3681995.613|    16973999.77|    93.493| 174.8378308|
 |4.36|      3798898.946|    16601188.39|    102.8006    |184.4399085|
