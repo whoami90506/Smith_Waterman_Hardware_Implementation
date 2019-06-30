@@ -1,0 +1,31 @@
+ 
+****************************************
+Report : area
+Design : SmithWaterman
+Version: N-2017.09-SP2
+Date   : Sun Jun 30 13:16:09 2019
+****************************************
+
+Library(s) Used:
+
+    typical (File: /home/raid7_2/course/cvsd/CBDK_IC_Contest/CIC/SynopsysDC/db/typical.db)
+    sram_1024x8_t13 (File: /home/raid7_2/userb05/b05064/SmithWaterman/hardware/Memory/sram_1024x8_t13/sram_1024x8_t13/LM/sram_1024x8_t13_slow_syn.db)
+
+Number of ports:                         1107
+Number of nets:                        119722
+Number of cells:                       114303
+Number of combinational cells:         105078
+Number of sequential cells:              9192
+Number of macros/black boxes:              32
+Number of buf/inv:                      23394
+Number of references:                     195
+
+Combinational area:            1137419.254605
+Buf/Inv area:                   143985.349070
+Noncombinational area:          318742.858070
+Macro/Black Box area:          2225833.500000
+Net Interconnect area:        12616396.844940
+
+Total cell area:               3681995.612675
+Total area:                   16298392.457615
+1

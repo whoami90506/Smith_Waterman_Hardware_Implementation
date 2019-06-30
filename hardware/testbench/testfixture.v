@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`define CYCLE    4.8           	        // Modify your clock period here
+`define CYCLE    4.61           	        // Modify your clock period here
 `define TERMINATION  50000000
 
 `include "src/util.v"
@@ -51,8 +51,8 @@ initial begin
 	param = 16'b0;
 
 	//reset
-	@(negedge clk); rst_n = 1'b0;
-	#(`CYCLE * 3.5); rst_n = 1'b1;
+	@(posedge clk); rst_n = 1'b0;
+	#(`CYCLE * 3.1); rst_n = 1'b1;
 
 	//set t
 	@(negedge clk);#(`CYCLE);

@@ -1,0 +1,84 @@
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : SmithWaterman
+Version: N-2017.09-SP2
+Date   : Sun Jun 30 13:16:09 2019
+****************************************
+
+Operating Conditions: slow   Library: slow
+Wire Load Model Mode: top
+
+  Startpoint: dp/o_s_reg_110_
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: PE_name1_54__PE_cell_vOut_alpha_reg_6_
+            (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  SmithWaterman      tsmc13_wl10           slow
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.50       0.50
+  dp/o_s_reg_110_/CK (DFFRX2)                             0.00       0.50 r
+  dp/o_s_reg_110_/Q (DFFRX2)                              0.36       0.86 f
+  dp/o_s_110_ (DataProcessor)                             0.00       0.86 f
+  U68811/Y (XOR2X4)                                       0.12       0.98 f
+  U55582/Y (NOR2X6)                                       0.11       1.09 r
+  U16892/Y (BUFX16)                                       0.11       1.19 r
+  U51404/Y (BUFX20)                                       0.09       1.28 r
+  U68816/Y (MXI2X2)                                       0.15       1.43 f
+  U68817/Y (NOR2X2)                                       0.22       1.65 r
+  U68821/Y (NOR2X2)                                       0.10       1.75 f
+  U51136/Y (AOI21X4)                                      0.12       1.87 r
+  U54492/Y (OR2X4)                                        0.11       1.99 r
+  U4324/Y (NAND2X6)                                       0.07       2.05 f
+  U31838/Y (NAND2X2)                                      0.09       2.15 r
+  U31837/Y (AOI21X4)                                      0.06       2.21 f
+  U31836/Y (NOR2BX4)                                      0.10       2.31 r
+  U68983/Y (CLKXOR2X2)                                    0.26       2.57 f
+  U68984/Y (NAND2X4)                                      0.13       2.71 r
+  U68985/Y (AND2X8)                                       0.10       2.81 r
+  U27883/Y (AND4X6)                                       0.13       2.94 r
+  U26858/Y (NAND3X6)                                      0.06       2.99 f
+  U26856/Y (NAND2X8)                                      0.07       3.06 r
+  U27869/Y (BUFX20)                                       0.12       3.18 r
+  U69114/Y (MXI2X4)                                       0.13       3.31 f
+  U69125/Y (AOI2BB2X2)                                    0.18       3.49 f
+  U28672/Y (NAND3X4)                                      0.11       3.60 r
+  U28669/Y (NAND4X4)                                      0.08       3.68 f
+  U20013/Y (NAND2X6)                                      0.07       3.75 r
+  U28662/Y (NAND3X6)                                      0.08       3.82 f
+  U56330/Y (BUFX20)                                       0.11       3.94 f
+  U69151/Y (MXI2X4)                                       0.12       4.05 f
+  U47386/Y (NAND2X2)                                      0.13       4.18 r
+  U69155/Y (OAI21X4)                                      0.07       4.25 f
+  U69156/Y (AOI21X4)                                      0.13       4.38 r
+  U52282/Y (INVX4)                                        0.09       4.47 f
+  U25231/Y (AOI21X2)                                      0.13       4.60 r
+  U48069/Y (XNOR2X4)                                      0.11       4.71 f
+  U48068/Y (OAI22X1)                                      0.14       4.85 r
+  PE_name1_54__PE_cell_vOut_alpha_reg_6_/D (DFFRX1)       0.00       4.85 r
+  data arrival time                                                  4.85
+
+  clock clk (rise edge)                                   4.60       4.60
+  clock network delay (ideal)                             0.50       5.10
+  clock uncertainty                                      -0.10       5.00
+  PE_name1_54__PE_cell_vOut_alpha_reg_6_/CK (DFFRX1)      0.00       5.00 r
+  library setup time                                     -0.15       4.85
+  data required time                                                 4.85
+  --------------------------------------------------------------------------
+  data required time                                                 4.85
+  data arrival time                                                 -4.85
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1
