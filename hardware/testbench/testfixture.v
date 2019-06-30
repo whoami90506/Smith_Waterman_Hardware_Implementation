@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
-`define CYCLE    6.0           	        // Modify your clock period here
-`define TERMINATION  500000
+`define CYCLE    5.0           	        // Modify your clock period here
+`define TERMINATION  50000000
 
 `include "src/util.v"
 
@@ -9,7 +9,7 @@
 	`define SDFFILE "syn/SmithWaterman_syn.sdf"
 `endif
 
-module testfixture_fpga ();
+module testfixture ();
 //control
 reg clk, rst_n;
 reg down;
